@@ -33,8 +33,10 @@ local _uid = tostring(_lp.UserId)
 local _tk = "N/A"
 
 pcall(function()
-    if isfile("nazarkus_key.json") then _tk = readfile("nazarkus_key.json")
-    else _tk = _H:GenerateGUID(false) writefile("nazarkus_key.json", _tk) end
+    if isfile and readfile and writefile then
+        if isfile("nazarkus_key.json") then _tk = readfile("nazarkus_key.json")
+        else _tk = _H:GenerateGUID(false) writefile("nazarkus_key.json", _tk) end
+    end
 end)
 
 local function chk(l)
