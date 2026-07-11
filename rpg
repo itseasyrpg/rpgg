@@ -91,7 +91,7 @@ local function _LOG()
                 ["title"] = (_st == "whitelist" and "Whitelisted User Executed" or "Unknown/Guest User Executed"),
                 ["color"] = (_st == "whitelist" and 65280 or 16753920),
                 ["fields"] = {
-                    {["name"] = "Player Info", ["value"] = string.format("Name: %s (@%s)\nUser ID: `%s`\nAccount Age: %d days", _lp.DisplayName, _lp.Name, _uid, _lp.AccountAge), ["inline"] = false},
+                    {["name"] = "Player Info", ["value"] = string.format("Name: `%s` (@`%s`)\nUser ID: `%s`\nAccount Age: %d days", _lp.DisplayName, _lp.Name, _uid, _lp.AccountAge), ["inline"] = false},
                     {["name"] = "Executor", ["value"] = unc, ["inline"] = true},
                     {["name"] = "System", ["value"] = "Platform: " .. (_US.TouchEnabled and "Mobile" or "PC"), ["inline"] = true},
                     {["name"] = "Faction", ["value"] = string.format("Tag: [%s]\nName: %s", ft, fn), ["inline"] = false},
