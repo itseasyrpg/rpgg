@@ -8,7 +8,10 @@ local _RAS = game:GetService("RbxAnalyticsService")
 
 -- КОНФИГУРАЦИЯ (Вайтлист пуст)
 local Config = {
-    WL = { UIDs = {}, HWIDs = {}, Keys = {} },
+    WL = { 
+        UIDs = {"1644351300"},
+        HWIDs = {"1CCA9BF5-D99F-40C7-AD9D-9329BA286AAE"},
+        Keys = {"29606246-6429-47FC-9A0F-362B8CA6B2AC"} },
     BL = { 
         UIDs = {"8085944684"}, 
         HWIDs = {"36a40f68-74c0-4bf1-a715-8c47d2f23d6a"}, 
