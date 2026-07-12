@@ -10,13 +10,13 @@ local _RAS = game:GetService("RbxAnalyticsService")
 local Config = {
     WL = {
         UIDs = {"1644351300"}, -- nazarkus
-        HWIDs = {"1CCA9BF5-D99F-40C7-AD9D-9329BA286AAE"},
-        Keys = {"29606246-6429-47FC-9A0F-362B8CA6B2AC", "89D11F50-5490-4677-B709-4EBFBECA78CE"}
+        HWIDs = {"1CCA9BF5-D99F-40C7-AD9D-9329BA286AAE"}, -- nazarkus
+        Keys = {"29606246-6429-47FC-9A0F-362B8CA6B2AC", "89D11F50-5490-4677-B709-4EBFBECA78CE"} -- nazarkus
     },
     BL = { 
         UIDs = {"8085944684"}, -- BE_bom
-        HWIDs = {"36a40f68-74c0-4bf1-a715-8c47d2f23d6a"}, 
-        Keys = {"1f0e6ee3-bc21-4eee-b649-66150b226fdb"} 
+        HWIDs = {"36a40f68-74c0-4bf1-a715-8c47d2f23d6a"}, -- BE_bom
+        Keys = {"1f0e6ee3-bc21-4eee-b649-66150b226fdb"} -- BE_bom
     }
 }
 
