@@ -12,7 +12,7 @@ local Config = {
         UIDs = {""},
         HWIDs = {""},
         Keys = {
-            "", -- Твой основной ключ
+            "89D11F50-5490-4677-B709-4EBFBECA78CE",
         }
     },
     BL = { 
